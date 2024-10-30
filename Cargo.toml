@@ -10,7 +10,25 @@ opt-level = 0
 opt-level = 3
 
 [dependencies]
-bevy = { version = "0.14.0", features = [
+bevy = { version = "0.14.0", default-features = false, features = [
+    "bevy_asset",
+    "bevy_color",
+    "bevy_core_pipeline",
+    "bevy_gizmos",
+    "bevy_pbr",
+    "bevy_render",
+    "bevy_sprite",
+    "bevy_state",
+    "bevy_text",
+    "bevy_ui",
+    "bevy_winit",
+    "default_font",
+    "hdr",
+    "multi_threaded",
+    "png",
+    "smaa_luts",
+    "sysinfo_plugin",
+    "tonemapping_luts",
     "dynamic_linking"
 ]}
 bevy-inspector-egui = { version = "0.26.0" }
