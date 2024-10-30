@@ -1,0 +1,48 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'overheat-rust'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=overheat-rust",
+                    "--package=overheat-rust",
+                ],
+                "filter": {
+                    "name": "overheat-rust",
+                    "kind": "bin"
+                }
+            },
+            "args": ["server"],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PATH": "${env:PATH};${env:USERPROFILE}/.rustup/toolchains/stable-x86_64-pc-windows-msvc/bin;${workspaceFolder}/target/debug/deps;${workspaceFolder}/target/debug/"
+            }
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'overheat-rust'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=overheat-rust",
+                    "--package=overheat-rust"
+                ],
+                "filter": {
+                    "name": "overheat-rust",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
