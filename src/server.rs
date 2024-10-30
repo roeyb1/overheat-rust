@@ -83,7 +83,7 @@ fn replicate_players(
 ) {
     for (entity, replicated) in query.iter() {
         let client_id = replicated.client_id();
-        info!("recevied player spawn event from client {client_id:?}");
+        info!("received player spawn event from client {client_id:?}");
 
         if let Some(mut e) = commands.get_entity(entity) {
             let mut sync_target = SyncTarget::default();

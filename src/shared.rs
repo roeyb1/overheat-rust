@@ -64,7 +64,7 @@ impl Plugin for OverheatSharedPlugin {
     }
 }
 
-#[derive(Component, Serialize, Deserialize)]
+#[derive(Component, Serialize, Deserialize, PartialEq, Reflect, Clone)]
 pub struct MoveSpeed(pub f32);
 
 fn setup_diagnostics(mut on_screen: ResMut<ScreenDiagnostics>) {

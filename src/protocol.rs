@@ -1,9 +1,9 @@
 use avian2d::prelude::{AngularVelocity, LinearVelocity, Position, Rotation};
 use bevy::prelude::*;
-use lightyear::{prelude::{client::ComponentSyncMode, AppComponentExt, AppMessageExt, ChannelDirection}, utils::avian2d::{position, rotation}};
+use lightyear::{prelude::{client::ComponentSyncMode, AppComponentExt, ChannelDirection}, utils::avian2d::{position, rotation}};
 use lightyear::shared::input::leafwing::LeafwingInputPlugin;
 
-use crate::player::{PlayerActions, PlayerId};
+use crate::{player::{PlayerActions, PlayerId}, shared::MoveSpeed};
 
 pub struct ProtocolPlugin;
 
@@ -23,6 +23,9 @@ impl Plugin for ProtocolPlugin {
             .add_interpolation(ComponentSyncMode::Full)
             .add_interpolation_fn(rotation::lerp)
             .add_correction_fn(rotation::lerp);
+
+        app.register_component::<MoveSpeed>(ChannelDirection::Bidirectional)
+            .add_prediction(ComponentSyncMode::Simple);
 
         app.register_component::<LinearVelocity>(ChannelDirection::Bidirectional)
             .add_prediction(ComponentSyncMode::Full);

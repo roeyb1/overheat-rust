@@ -175,7 +175,7 @@ fn combined_app(
     let mut app = App::new();
     app.add_plugins(DefaultPlugins.build().set(LogPlugin {
         level: Level::INFO,
-        filter: "wgpu=error,bevy_render=info,bevy_ecs=warn".to_string(),
+        filter: "wgpu=off,bevy_render=info,bevy_ecs=warn".to_string(),
         ..default()
     }));
     if settings.client.inspector {
@@ -257,7 +257,7 @@ fn client_app(
             .build()
             .set(LogPlugin {
                 level: Level::INFO,
-                filter: "wgpu=error,bevy_render=info,bevy_ecs=warn".into(),
+                filter: "wgpu=off,bevy_render=info,bevy_ecs=warn".into(),
                 ..default()
             }),
     );
