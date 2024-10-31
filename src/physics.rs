@@ -34,7 +34,8 @@ impl PhysicsBundle {
             lock_axes: LockedAxes::default()
                 .lock_rotation_x()
                 .lock_rotation_y()
-                .lock_rotation_z(),
+                .lock_rotation_z()
+                .lock_translation_y(),
             friction: Friction::new(0.).with_combine_rule(CoefficientCombine::Min),
         }
     }
