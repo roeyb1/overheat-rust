@@ -382,7 +382,7 @@ dependencies = [
  "bevy",
  "bevy_math",
  "bitflags 2.6.0",
- "derive_more",
+ "derive_more 0.99.18",
  "fxhash",
  "indexmap",
  "itertools",
@@ -1795,6 +1795,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6245d59a3e82a7fc217c5828a6692dbc6dfb63a0c8c90495621f7b9d79704a0e"
 
 [[package]]
+name = "convert_case"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ec182b0ca2f35d8fc196cf3404988fd8b8c739a4d270ff118a398feb0cbec1ca"
+dependencies = [
+ "unicode-segmentation",
+]
+
+[[package]]
 name = "core-foundation"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1949,11 +1958,33 @@ version = "0.99.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5f33878137e4dafd7fa914ad4e259e18a4e8e532b9617a2d0150262bf53abfce"
 dependencies = [
- "convert_case",
+ "convert_case 0.4.0",
  "proc-macro2",
  "quote",
  "rustc_version",
  "syn 2.0.85",
+]
+
+[[package]]
+name = "derive_more"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a9b99b9cbbe49445b21764dc0625032a89b145a2642e67603e1c936f5458d05"
+dependencies = [
+ "derive_more-impl",
+]
+
+[[package]]
+name = "derive_more-impl"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cb7330aeadfbe296029522e6c40f315320aba36fc43a5b3632f3795348f3bd22"
+dependencies = [
+ "convert_case 0.6.0",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.85",
+ "unicode-xid",
 ]
 
 [[package]]
@@ -2927,7 +2958,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4021fbf18a5ed42d81fe26d1976b11567db22ebb80baa06d05dcbd270d455c7e"
 dependencies = [
  "bevy",
- "derive_more",
+ "derive_more 0.99.18",
  "dyn-clone",
  "dyn-eq",
  "dyn-hash",
@@ -3647,6 +3678,7 @@ dependencies = [
  "bevy_screen_diagnostics",
  "bevy_sprite3d",
  "clap",
+ "derive_more 1.0.0",
  "leafwing-input-manager",
  "lightyear",
  "serde",

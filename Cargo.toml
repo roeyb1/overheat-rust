@@ -51,3 +51,4 @@ avian3d = { version = "0.1.1", default-features = false, features = [
     "parallel",
     "serialize"
 ]}
+derive_more = { version = "1.0.0", features = [ "full" ]}
