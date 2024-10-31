@@ -1,12 +1,11 @@
-use avian2d::prelude::LinearVelocity;
 use bevy::prelude::*;
 use bevy_asset_loader::loading_state::{config::ConfigureLoadingState, LoadingState, LoadingStateAppExt};
 use bevy_sprite3d::{Sprite3d, Sprite3dParams, Sprite3dPlugin};
 use leafwing_input_manager::prelude::{ActionState, InputMap, KeyboardVirtualDPad, WithDualAxisProcessingPipelineExt};
-use lightyear::{prelude::{client::{ClientCommands, ClientConnection, Interpolated, NetClient, Predicted, PredictionSet, Replicate}, MainSet, PrePredicted, ReplicateHierarchy}, shared::replication::components::Controlled};
+use lightyear::{prelude::{client::{ClientCommands, Interpolated, Predicted, PredictionSet}, MainSet}, shared::replication::components::Controlled};
 use lightyear::client::events::*;
 
-use crate::{assets::PlayerAssets, physics::PhysicsBundle, player::{shared_player_movement, PlayerActions, PlayerBundle, PlayerId}, shared::{FixedSet, GameState, MoveSpeed}};
+use crate::{assets::PlayerAssets, physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, PlayerActions, PlayerBundle}, shared::{FixedSet, GameState, MoveSpeed}};
 
 pub struct OverheatClientPlugin;
 
@@ -29,7 +28,7 @@ impl Plugin for OverheatClientPlugin {
                 .run_if(in_state(GameState::Game))
         )
         .add_systems(FixedUpdate, 
-            player_movement
+            predicted_player_movement
                 .in_set(FixedSet::Main)
         )
         .add_systems(
@@ -113,7 +112,6 @@ fn handle_connection(
                 ])
                 .with_dual_axis(
                     PlayerActions::Move, KeyboardVirtualDPad::WASD
-                        .with_circle_deadzone(0.1)
                         .inverted_y()
                 ),
             ),
@@ -165,11 +163,12 @@ fn add_player_physics(
     }
 }
 
-fn player_movement(
-    mut query: Query<(&mut LinearVelocity, &MoveSpeed, &ActionState<PlayerActions>), With<Predicted>>,
+fn predicted_player_movement(
+    time: Res<Time>,
+    mut query: Query<(CharacterQuery, &MoveSpeed, &ActionState<PlayerActions>), With<Predicted>>,
 ) {
-    for (velocity, speed, action_state) in query.iter_mut() {
-        shared_player_movement(velocity, speed, action_state);
+    for (mut character, move_speed, action_state) in &mut query {
+        shared_player_movement(&time, move_speed, action_state, &mut character);
     }
 }
 

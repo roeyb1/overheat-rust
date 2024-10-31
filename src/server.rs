@@ -1,10 +1,9 @@
-use avian2d::prelude::LinearVelocity;
 use bevy::prelude::*;
 use leafwing_input_manager::prelude::ActionState;
-use lightyear::prelude::{client::{Confirmed, Predicted}, server::{ControlledBy, Replicate, ServerCommands, ServerReplicationSet, SyncTarget}, InputChannel, InputMessage, MainSet, NetworkTarget, OverrideTargetComponent, PrePredicted, Replicated};
+use lightyear::prelude::{server::{ControlledBy, Replicate, ServerCommands, ServerReplicationSet, SyncTarget}, InputChannel, InputMessage, MainSet, NetworkTarget, OverrideTargetComponent, PrePredicted, Replicated};
 use lightyear::server::{connection::ConnectionManager, events::MessageEvent};
 
-use crate::{physics::PhysicsBundle, player::{shared_player_movement, PlayerActions, PlayerId, REPLICATION_GROUP}, shared::{FixedSet, MoveSpeed}};
+use crate::{physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, PlayerActions, PlayerId, REPLICATION_GROUP}, shared::{FixedSet, MoveSpeed}};
 
 pub struct OverheatServerPlugin {
     pub predict_all: bool,
@@ -113,9 +112,10 @@ fn replicate_players(
 }
 
 fn movement(
-    mut query: Query<(&mut LinearVelocity, &MoveSpeed, &ActionState<PlayerActions>), (Without<Confirmed>, Without<Predicted>)>,
+    time: Res<Time>,
+    mut query: Query<(CharacterQuery, &MoveSpeed, &ActionState<PlayerActions>)>,
 ) {
-    for (velocity, move_speed, action) in query.iter_mut() {
-        shared_player_movement(velocity, move_speed, action);
+    for (mut character, move_speed, action_state) in &mut query {
+        shared_player_movement(&time, move_speed, action_state, &mut character);
     }
 }

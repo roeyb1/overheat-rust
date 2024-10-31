@@ -1,10 +1,9 @@
-use avian2d::prelude::*;
 use bevy::prelude::*;
 use leafwing_input_manager::{prelude::{ActionState, InputMap}, Actionlike, InputManagerBundle};
 use lightyear::prelude::{client, ClientId, PrePredicted, ReplicateHierarchy, ReplicationGroup};
 use serde::{Deserialize, Serialize};
 
-use crate::{physics::PhysicsBundle, shared::MoveSpeed};
+use crate::{physics::{CharacterQueryItem, PhysicsBundle}, shared::MoveSpeed};
 
 
 pub const REPLICATION_GROUP: ReplicationGroup = ReplicationGroup::new_id(1);
@@ -53,23 +52,34 @@ impl PlayerBundle {
             spatial: SpatialBundle::default(),
             physics: PhysicsBundle::player(),
             pre_predicted: PrePredicted::default(),
-            move_speed: MoveSpeed(2.),
+            move_speed: MoveSpeed(10.),
             name: Name::from("Player"),
         }
     }
 }
 
 pub fn shared_player_movement(
-    mut velocity: Mut<LinearVelocity>,
+    time: &Res<Time>,
     move_speed: &MoveSpeed,
     action: &ActionState<PlayerActions>,
+    character: &mut CharacterQueryItem,
 ) {
     use std::f32::consts::PI;
 
-    let move_direction = action.clamped_axis_pair(&PlayerActions::Move);
+    const MAX_ACCEL: f32 = 20.;
+    
+    let max_velocity_delta_per_tick = MAX_ACCEL * time.delta_seconds();
 
-    if move_direction != Vec2::ZERO {
-        let iso_dir = Vec2::from_angle(-PI / 4.).rotate(move_direction);
-        velocity.0 += move_speed.0 * iso_dir;
-    }
+    let input_dir = action.axis_pair(&PlayerActions::Move).clamp_length_max(1.);
+    let move_dir = Vec2::from_angle(-PI / 4.).rotate(input_dir);
+    let move_dir = Vec3::new(move_dir.x, 0., move_dir.y);
+
+    let current_velocity = Vec3::new(character.linear_velocity.x, 0., character.linear_velocity.z);
+    let desired_velocity = move_dir * move_speed.0;
+
+    let new_velocity = current_velocity.move_towards(desired_velocity, max_velocity_delta_per_tick);
+
+    let required_accel = (new_velocity - current_velocity) / time.delta_seconds();
+
+    character.external_force.apply_force(required_accel * character.mass.0);
 }

@@ -1,8 +1,7 @@
-use avian2d::prelude::*;
+use avian3d::prelude::*;
 use bevy::{core_pipeline::{bloom::BloomSettings, tonemapping::Tonemapping}, diagnostic::LogDiagnosticsPlugin, pbr::ScreenSpaceAmbientOcclusionBundle, prelude::*, render::{camera::ScalingMode, RenderPlugin}};
 use bevy_screen_diagnostics::{Aggregate, ScreenDiagnostics, ScreenDiagnosticsPlugin};
-use bevy_sprite3d::Sprite3dPlugin;
-use lightyear::{client::prediction::diagnostics::PredictionDiagnosticsPlugin, prelude::client::{Confirmed, InterpolationSet, PredictionSet}, transport::io::IoDiagnosticsPlugin};
+use lightyear::{client::prediction::diagnostics::PredictionDiagnosticsPlugin, transport::io::IoDiagnosticsPlugin};
 use serde::{Deserialize, Serialize};
 
 use crate::{player::PlayerId, protocol::ProtocolPlugin, FIXED_TIMESTEP_HZ};
@@ -29,13 +28,6 @@ impl Plugin for OverheatSharedPlugin {
         if app.is_plugin_added::<RenderPlugin>() {
             app.add_systems(Startup, init_camera);
 
-            app.add_systems(
-                PostUpdate,
-                debug_draw
-                    .after(InterpolationSet::Interpolate)
-                    .after(PredictionSet::VisualCorrection)
-            );
-
             app.add_plugins(LogDiagnosticsPlugin {
                 filter: Some(vec![
                     IoDiagnosticsPlugin::BYTES_IN,
@@ -48,14 +40,25 @@ impl Plugin for OverheatSharedPlugin {
             app.insert_resource(Msaa::Off);
         }
 
+        // Position and Rotation are the primary source of truth so no need to
+        // sync changes from Transform to Position.
+        app.insert_resource(avian3d::sync::SyncConfig {
+            transform_to_position: false,
+            position_to_transform: true,
+        });
+
         app.add_systems(Startup, init);
+
+        // SyncPlugin should be disabled then manually re-enabled so it synchronizes every frame in post update to capture interpolated values
         app.add_plugins(
             PhysicsPlugins::new(FixedUpdate)
                 .build()
-                .disable::<ColliderHierarchyPlugin>(),
+                .disable::<SyncPlugin>(),
         )
+        .add_plugins(SyncPlugin::new(PostUpdate))
+
         .insert_resource(Time::new_with(Physics::fixed_once_hz(FIXED_TIMESTEP_HZ)))
-        .insert_resource(Gravity(Vec2::ZERO));
+        .insert_resource(Gravity(Vec3::ZERO));
 
         app.configure_sets(
             FixedUpdate, (
@@ -138,13 +141,4 @@ fn init_camera(mut commands: Commands) {
 
 fn init() {
 
-}
-
-fn debug_draw(
-    mut gizmos: Gizmos,
-    players: Query<(&Position, &Rotation), (Without<Confirmed>, With<PlayerId>)>
-) {
-    for (position, rotation) in &players {
-        gizmos.rect_2d(Vec2::new(position.x, position.y), rotation.as_radians(), Vec2::ONE * 40., Color::WHITE);
-    }
 }
