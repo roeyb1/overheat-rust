@@ -23,7 +23,7 @@ impl Plugin for OverheatClientPlugin {
         )
         .add_systems(
             Update, (
-                add_player_physics,
+                finalize_remote_player_spawn,
                 handle_predicted_spawn,
                 handle_interpolated_spawn,
             )
@@ -72,16 +72,22 @@ fn handle_connection(
     }
 }
 
-fn add_player_physics(
+/// Blueprint pattern: when the player is replicated from the server, it will only contain
+/// the components which are always replicated. We need to add a few components that we don't
+/// need to be replicated all the time, for example the physics data which is constant and
+/// shouldn't be constantly replicated.
+fn finalize_remote_player_spawn(
     mut commands: Commands,
     mut query: Query<(Entity, Has<Controlled>), Or<(Added<Interpolated>, Added<Predicted>)>>,
 ) {
     for (entity, locally_controlled) in query.iter_mut() {
+        //only need to do this for remote players:
         if locally_controlled {
             continue;
         }
 
-        //only need to do this for remote players:
+        commands.entity(entity).insert(SpatialBundle::default());
+
         commands.entity(entity).insert(PhysicsBundle::player());
     }
 }
