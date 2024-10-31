@@ -3,7 +3,7 @@ use leafwing_input_manager::{prelude::{ActionState, InputMap}, Actionlike, Input
 use lightyear::prelude::{client, ClientId, PrePredicted, ReplicateHierarchy, ReplicationGroup};
 use serde::{Deserialize, Serialize};
 
-use crate::{physics::{CharacterQueryItem, PhysicsBundle}, shared::MoveSpeed};
+use crate::physics::{CharacterQueryItem, PhysicsBundle};
 
 
 pub const REPLICATION_GROUP: ReplicationGroup = ReplicationGroup::new_id(1);
@@ -18,6 +18,9 @@ pub enum PlayerActions {
 
 #[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq, Reflect)]
 pub struct PlayerId(pub ClientId);
+
+#[derive(Component, Serialize, Deserialize, PartialEq, Reflect, Clone)]
+pub struct MoveSpeed(pub f32);
 
 #[derive(Bundle)]
 pub struct PlayerBundle {

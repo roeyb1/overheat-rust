@@ -3,7 +3,7 @@ use leafwing_input_manager::prelude::ActionState;
 use lightyear::prelude::{server::{ControlledBy, Replicate, ServerCommands, ServerReplicationSet, SyncTarget}, InputChannel, InputMessage, MainSet, NetworkTarget, OverrideTargetComponent, PrePredicted, Replicated};
 use lightyear::server::{connection::ConnectionManager, events::MessageEvent};
 
-use crate::{physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, PlayerActions, PlayerId, REPLICATION_GROUP}, shared::{FixedSet, MoveSpeed}};
+use crate::{physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, MoveSpeed, PlayerActions, PlayerId, REPLICATION_GROUP}, shared::FixedSet};
 
 pub struct OverheatServerPlugin {
     pub predict_all: bool,
@@ -31,7 +31,11 @@ impl Plugin for OverheatServerPlugin {
             replicate_players
                 .in_set(ServerReplicationSet::ClientReplication)
         )
-        .add_systems(FixedUpdate, movement.in_set(FixedSet::Main));
+        .add_systems(
+            FixedUpdate,
+            movement
+                .in_set(FixedSet::Main)
+        );
     }
 }
 

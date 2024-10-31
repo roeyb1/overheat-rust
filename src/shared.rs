@@ -1,10 +1,7 @@
 use avian3d::prelude::*;
-use bevy::{core_pipeline::{bloom::BloomSettings, tonemapping::Tonemapping}, diagnostic::LogDiagnosticsPlugin, pbr::ScreenSpaceAmbientOcclusionBundle, prelude::*, render::{camera::ScalingMode, RenderPlugin}};
-use bevy_screen_diagnostics::{Aggregate, ScreenDiagnostics, ScreenDiagnosticsPlugin};
-use lightyear::{client::prediction::diagnostics::PredictionDiagnosticsPlugin, transport::io::IoDiagnosticsPlugin};
-use serde::{Deserialize, Serialize};
+use bevy::{prelude::*, render::RenderPlugin};
 
-use crate::{player::PlayerId, protocol::ProtocolPlugin, FIXED_TIMESTEP_HZ};
+use crate::{player::PlayerId, protocol::ProtocolPlugin, rendering::OverheatRenderPlugin, FIXED_TIMESTEP_HZ};
 
 pub struct OverheatSharedPlugin;
 
@@ -24,20 +21,9 @@ pub enum GameState {
 impl Plugin for OverheatSharedPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(ProtocolPlugin);
-        
-        if app.is_plugin_added::<RenderPlugin>() {
-            app.add_systems(Startup, init_camera);
 
-            app.add_plugins(LogDiagnosticsPlugin {
-                filter: Some(vec![
-                    IoDiagnosticsPlugin::BYTES_IN,
-                    IoDiagnosticsPlugin::BYTES_OUT,
-                ]),
-                ..default()
-            });
-            app.add_systems(Startup, setup_diagnostics);
-            app.add_plugins(ScreenDiagnosticsPlugin::default());
-            app.insert_resource(Msaa::Off);
+        if app.is_plugin_added::<RenderPlugin>() {
+            app.add_plugins(OverheatRenderPlugin);
         }
 
         // Position and Rotation are the primary source of truth so no need to
@@ -74,69 +60,6 @@ impl Plugin for OverheatSharedPlugin {
 
         app.register_type::<PlayerId>();
     }
-}
-
-#[derive(Component, Serialize, Deserialize, PartialEq, Reflect, Clone)]
-pub struct MoveSpeed(pub f32);
-
-fn setup_diagnostics(mut on_screen: ResMut<ScreenDiagnostics>) {
-    on_screen
-        .add(
-            "Rollbacks".to_string(),
-            PredictionDiagnosticsPlugin::ROLLBACKS,
-        )
-        .aggregate(Aggregate::Value)
-        .format(|v| format!("{v:.0}"));
-    on_screen
-        .add(
-            "Rollback ticks".to_string(),
-            PredictionDiagnosticsPlugin::ROLLBACK_TICKS
-        )
-        .aggregate(Aggregate::Value)
-        .format(|v| format!("{v:.0}"));
-    on_screen
-        .add(
-            "RB Depth".to_string(),
-            PredictionDiagnosticsPlugin::ROLLBACK_DEPTH,
-        )
-        .aggregate(Aggregate::Value)
-        .format(|v| format!("{v:.1}"));
-    on_screen
-        .add("KB_in".to_string(), IoDiagnosticsPlugin::BYTES_IN)
-        .aggregate(Aggregate::Average)
-        .format(|v| format!("{v:0>3.0}"));
-    on_screen
-        .add("KB_out".to_string(), IoDiagnosticsPlugin::BYTES_OUT)
-        .aggregate(Aggregate::Average)
-        .format(|v| format!("{v:0>3.0}"));
-}
-
-fn init_camera(mut commands: Commands) {
-    commands.spawn((
-        Camera3dBundle {
-            camera: Camera {
-                hdr: true,
-                ..default()
-            },
-            //projection: bevy::prelude::Projection::Perspective(PerspectiveProjection {
-            //    fov: PI / 6.,
-            //    ..default()
-            //}),
-            projection: OrthographicProjection {
-                scaling_mode: ScalingMode::FixedVertical(15.0),
-                ..default()
-            }.into(),
-            transform: Transform::from_xyz(22., 22., 22.).looking_at(Vec3::splat(0.), Vec3::Y),
-            ..default()
-        },
-        BloomSettings {
-            intensity: 0.3,
-            ..default()
-        },
-    ))
-    .insert(ScreenSpaceAmbientOcclusionBundle::default());
-
-    commands.spawn(Tonemapping::AcesFitted);
 }
 
 fn init() {
