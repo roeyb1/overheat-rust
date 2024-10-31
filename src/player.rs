@@ -1,7 +1,7 @@
 use avian2d::prelude::*;
 use bevy::prelude::*;
 use leafwing_input_manager::{prelude::{ActionState, InputMap}, Actionlike, InputManagerBundle};
-use lightyear::prelude::{client, ClientId, PrePredicted, ReplicationGroup};
+use lightyear::prelude::{client, ClientId, PrePredicted, ReplicateHierarchy, ReplicationGroup};
 use serde::{Deserialize, Serialize};
 
 use crate::{physics::PhysicsBundle, shared::MoveSpeed};
@@ -28,6 +28,7 @@ pub struct PlayerBundle {
     pre_predicted: PrePredicted,
     name: Name,
 
+    spatial: SpatialBundle,
     physics: PhysicsBundle,
 
     // #todo: move
@@ -40,15 +41,19 @@ impl PlayerBundle {
             id: PlayerId(id),
             replicate: client::Replicate {
                 group: REPLICATION_GROUP,
+                hierarchy: ReplicateHierarchy {
+                    recursive: false,
+                },
                 ..default()
             },
             inputs: InputManagerBundle::<PlayerActions> {
                 action_state: ActionState::default(),
                 input_map,
             },
+            spatial: SpatialBundle::default(),
             physics: PhysicsBundle::player(),
             pre_predicted: PrePredicted::default(),
-            move_speed: MoveSpeed(10.),
+            move_speed: MoveSpeed(2.),
             name: Name::from("Player"),
         }
     }

@@ -32,7 +32,7 @@ bevy = { version = "0.14.0", default-features = false, features = [
     "dynamic_linking"
 ]}
 bevy-inspector-egui = { version = "0.26.0" }
-lightyear = { path = "crates/lightyear/lightyear", features = [ 
+lightyear = { path = "crates/lightyear/lightyear", default-features = false, features = [ 
     "steam",
     "leafwing",
     "avian2d",

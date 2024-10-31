@@ -1,6 +1,7 @@
 use avian2d::prelude::*;
-use bevy::{diagnostic::LogDiagnosticsPlugin, prelude::*, render::RenderPlugin};
+use bevy::{core_pipeline::{bloom::BloomSettings, tonemapping::Tonemapping}, diagnostic::LogDiagnosticsPlugin, pbr::ScreenSpaceAmbientOcclusionBundle, prelude::*, render::{camera::ScalingMode, RenderPlugin}};
 use bevy_screen_diagnostics::{Aggregate, ScreenDiagnostics, ScreenDiagnosticsPlugin};
+use bevy_sprite3d::Sprite3dPlugin;
 use lightyear::{client::prediction::diagnostics::PredictionDiagnosticsPlugin, prelude::client::{Confirmed, InterpolationSet, PredictionSet}, transport::io::IoDiagnosticsPlugin};
 use serde::{Deserialize, Serialize};
 
@@ -12,6 +13,13 @@ pub struct OverheatSharedPlugin;
 pub enum FixedSet {
     Main,
     Physics,
+}
+
+#[derive(States, Hash, Debug, PartialEq, Eq, Clone, Default)]
+pub enum GameState {
+    #[default]
+    AssetLoading,
+    Game,
 }
 
 impl Plugin for OverheatSharedPlugin {
@@ -37,6 +45,7 @@ impl Plugin for OverheatSharedPlugin {
             });
             app.add_systems(Startup, setup_diagnostics);
             app.add_plugins(ScreenDiagnosticsPlugin::default());
+            app.insert_resource(Msaa::Off);
         }
 
         app.add_systems(Startup, init);
@@ -100,11 +109,35 @@ fn setup_diagnostics(mut on_screen: ResMut<ScreenDiagnostics>) {
 }
 
 fn init_camera(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn((
+        Camera3dBundle {
+            camera: Camera {
+                hdr: true,
+                ..default()
+            },
+            //projection: bevy::prelude::Projection::Perspective(PerspectiveProjection {
+            //    fov: PI / 6.,
+            //    ..default()
+            //}),
+            projection: OrthographicProjection {
+                scaling_mode: ScalingMode::FixedVertical(15.0),
+                ..default()
+            }.into(),
+            transform: Transform::from_xyz(22., 22., 22.).looking_at(Vec3::splat(0.), Vec3::Y),
+            ..default()
+        },
+        BloomSettings {
+            intensity: 0.3,
+            ..default()
+        },
+    ))
+    .insert(ScreenSpaceAmbientOcclusionBundle::default());
+
+    commands.spawn(Tonemapping::AcesFitted);
 }
 
-fn init(mut _commands: Commands) {
-    //#todo: load the world
+fn init() {
+
 }
 
 fn debug_draw(
