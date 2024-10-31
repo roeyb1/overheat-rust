@@ -39,7 +39,8 @@ impl Plugin for OverheatSharedPlugin {
         app.add_plugins(
             PhysicsPlugins::new(FixedUpdate)
                 .build()
-                .disable::<SyncPlugin>(),
+                .disable::<SyncPlugin>()
+                .disable::<ColliderHierarchyPlugin>(),
         )
         .add_plugins(SyncPlugin::new(PostUpdate))
 

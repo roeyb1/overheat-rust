@@ -3,7 +3,7 @@ use leafwing_input_manager::prelude::{ActionState, InputMap, KeyboardVirtualDPad
 use lightyear::{prelude::{client::{ClientCommands, Interpolated, Predicted, PredictionSet}, MainSet}, shared::replication::components::Controlled};
 use lightyear::client::events::*;
 
-use crate::{physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, MoveSpeed, PlayerActions, PlayerBundle}, shared::{FixedSet, GameState}};
+use crate::{physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, MoveSpeed, PlayerActions, PlayerBundle}, shared::FixedSet};
 
 pub struct OverheatClientPlugin;
 
@@ -16,7 +16,6 @@ impl Plugin for OverheatClientPlugin {
             handle_connection
                 .after(MainSet::Receive)
                 .before(PredictionSet::SpawnPrediction)
-                .run_if(in_state(GameState::Game))
         )
         .add_systems(FixedUpdate, 
             predicted_player_movement
@@ -68,7 +67,6 @@ fn handle_connection(
             ),
         )).id();
 
-        info!("Attaching camera to locally controlled player");
         let camera_entity = cam_query.single();
         commands.entity(player).add_child(camera_entity);
     }

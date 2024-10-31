@@ -16,6 +16,7 @@ mod player;
 mod physics;
 mod assets;
 mod rendering;
+mod animation;
 
 pub const FIXED_TIMESTEP_HZ: f64 = 64.;
 pub const REPLICATION_INTERVAL: Duration = Duration::from_millis(100);

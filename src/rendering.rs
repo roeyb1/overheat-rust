@@ -5,13 +5,15 @@ use bevy_screen_diagnostics::{Aggregate, ScreenDiagnostics, ScreenDiagnosticsPlu
 use bevy_sprite3d::{Sprite3d, Sprite3dParams, Sprite3dPlugin};
 use lightyear::{client::prediction::diagnostics::PredictionDiagnosticsPlugin, prelude::client::{Confirmed, Predicted, VisualInterpolateStatus, VisualInterpolationPlugin}, transport::io::IoDiagnosticsPlugin};
 
-use crate::{assets::PlayerAssets, player::PlayerId, shared::GameState};
+use crate::{animation::{Animation, FaceCamera, OverheatAnimationPlugin}, assets::PlayerAssets, player::PlayerId, shared::GameState};
 
 pub struct OverheatRenderPlugin;
 
 impl Plugin for OverheatRenderPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(Sprite3dPlugin);
+
+        app.add_plugins(OverheatAnimationPlugin);
 
         app.init_state::<GameState>();
         app.add_loading_state(
@@ -86,6 +88,18 @@ fn init_level_visuals(
     mut materials: ResMut<Assets<StandardMaterial>>
 ) {
     // #todo: this is only spawning the rendering state of the world, we need a way to split render and physics and spawn this in a common way for server/client
+
+    commands.spawn(PointLightBundle {
+        point_light: PointLight {
+            intensity: 1_000_000.,
+            color: Color::srgb(1., 231. / 255., 221. / 255.),
+            shadows_enabled: true,
+            ..default()
+        },
+        transform: Transform::from_xyz(-2., 5., -2.),
+        ..default()
+    });
+
     commands.spawn(PbrBundle {
         mesh: meshes.add(Plane3d::default().mesh().size(30., 30.)),
         material: materials.add(Color::srgb(0.3, 0.5, 0.3)),
@@ -143,19 +157,17 @@ fn init_player_visuals(
                 transform: Transform::from_xyz(0., 0., 0.),
                 ..default()
             }.bundle_with_atlas(&mut sprite_params, atlas),
-            //Animation {
-            //    frames: vec![1, 2, 1, 0],
-            //    current: 0,
-            //    timer: Timer::from_seconds(0.2, TimerMode::Repeating),
-            //},
-            //FaceCamera {}
+            FaceCamera {},
+            Animation {
+                frames: vec![1, 2, 1, 0],
+                current: 0,
+                timer: Timer::from_seconds(0.2, TimerMode::Repeating),
+            },
         )).id();
 
         commands.entity(player).add_child(sprite);
 
         commands.entity(player).insert(PlayerVisualsMarker);
-
-        info!("Setup player visuals");
     }
 }
 
