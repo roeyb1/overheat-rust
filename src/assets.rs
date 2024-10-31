@@ -1,4 +1,4 @@
-use bevy::{asset::Handle, prelude::{Image, Resource}, sprite::TextureAtlasLayout};
+use bevy::prelude::*;
 use bevy_asset_loader::asset_collection::AssetCollection;
 
 
@@ -12,5 +12,6 @@ pub struct PlayerAssets {
     pub player_atlas: Handle<TextureAtlasLayout>,
 
     #[asset(path = "players/player.png")]
+    #[asset(image(sampler = nearest))]
     pub player_tileset: Handle<Image>,
 }
