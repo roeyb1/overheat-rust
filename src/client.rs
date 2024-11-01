@@ -1,9 +1,9 @@
-use bevy::prelude::*;
+use bevy::{math::VectorSpace, prelude::*};
 use leafwing_input_manager::prelude::{ActionState, InputMap, KeyboardVirtualDPad, WithDualAxisProcessingPipelineExt};
-use lightyear::{prelude::{client::{ClientCommands, Interpolated, Predicted, PredictionSet}, MainSet}, shared::replication::components::Controlled};
+use lightyear::{prelude::{client::{ClientCommands, Interpolated, Predicted, PredictionSet, Replicate}, MainSet}, shared::replication::components::Controlled};
 use lightyear::client::events::*;
 
-use crate::{physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, MoveSpeed, PlayerActions, PlayerBundle}, shared::FixedSet};
+use crate::{physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, CursorBundle, CursorPosition, MoveSpeed, PlayerActions, PlayerBundle}, shared::FixedSet};
 
 pub struct OverheatClientPlugin;
 
@@ -26,6 +26,7 @@ impl Plugin for OverheatClientPlugin {
                 finalize_remote_player_spawn,
                 handle_predicted_spawn,
                 handle_interpolated_spawn,
+                cursor_movement,
             )
         );
     }
@@ -69,6 +70,11 @@ fn handle_connection(
 
         let camera_entity = cam_query.single();
         commands.entity(player).add_child(camera_entity);
+
+        commands.spawn(CursorBundle {
+            position: CursorPosition(Vec3::ZERO),
+            replicate: Replicate::default(),
+        });
     }
 }
 
@@ -116,4 +122,26 @@ fn handle_interpolated_spawn(
         info!("New interpolated entity spawned: {}", entity)
     }
 
+}
+
+fn cursor_movement(
+    window_query: Query<&Window>,
+    camera_query: Query<(&GlobalTransform, &Camera)>,
+    mut cusor_query: Query<&mut CursorPosition, With<Controlled>>,
+) {
+    if let Ok(window) = window_query.get_single() {
+        if let Some(cursor_pos) = window.cursor_position() {
+            if let Ok((cam_transform, cam)) = camera_query.get_single() {
+                if let Some(ray) = cam.viewport_to_world(&cam_transform, cursor_pos) {
+                    let t = ray.intersect_plane(Vec3::splat(0.), InfinitePlane3d::new(Vec3::new(0.0, 1., 0.)));
+
+                    if let Some(t) = t {
+                        for mut cursor_pos in cusor_query.iter_mut() {
+                            cursor_pos.set_if_neq(CursorPosition(ray.get_point(t)));
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

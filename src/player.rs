@@ -1,3 +1,5 @@
+use std::ops::{Add, Mul};
+
 use bevy::prelude::*;
 use leafwing_input_manager::{prelude::{ActionState, InputMap}, Actionlike, InputManagerBundle};
 use lightyear::prelude::{client, ClientId, PrePredicted, ReplicateHierarchy, ReplicationGroup};
@@ -39,8 +41,34 @@ pub struct PlayerBundle {
     life: LifePool,
 }
 
+#[derive(Component, Serialize, Deserialize, PartialEq, Clone, Reflect)]
+pub struct CursorPosition(pub Vec3);
+
+#[derive(Bundle)]
+pub struct CursorBundle {
+    pub position: CursorPosition,
+    pub replicate: client::Replicate,
+}
+
+impl Add for CursorPosition {
+    type Output = CursorPosition;
+    #[inline]
+    fn add(self, rhs: CursorPosition) -> CursorPosition {
+        CursorPosition(self.0.add(rhs.0))
+    }
+}
+
+impl Mul<f32> for &CursorPosition {
+    type Output = CursorPosition;
+
+    fn mul(self, rhs: f32) -> Self::Output {
+        CursorPosition(self.0 * rhs)
+    }
+}
+
+
 impl PlayerBundle {
-    pub fn new(id: ClientId, _position: Vec2, input_map: InputMap<PlayerActions>) -> Self {
+    pub fn new(id: ClientId, position: Vec2, input_map: InputMap<PlayerActions>) -> Self {
         Self {
             id: PlayerId(id),
             replicate: client::Replicate {
@@ -54,7 +82,7 @@ impl PlayerBundle {
                 action_state: ActionState::default(),
                 input_map,
             },
-            spatial: SpatialBundle::default(),
+            spatial: SpatialBundle::from_transform(Transform::from_xyz(position.x, 0., position.y)),
             physics: PhysicsBundle::player(),
             pre_predicted: PrePredicted::default(),
             move_speed: MoveSpeed(12.),

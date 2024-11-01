@@ -11,7 +11,7 @@ pub mod life {
     #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default, Add, Sub, AddAssign, SubAssign, Serialize, Deserialize)]
     pub struct Life(pub f32);
 
-    #[derive(Component, Serialize, Deserialize)]
+    #[derive(Component, Serialize, Deserialize, PartialEq, Clone)]
     pub struct LifePool {
         current: Life,
         max: Life,
