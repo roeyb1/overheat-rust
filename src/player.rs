@@ -1,5 +1,3 @@
-use std::ops::{Add, Mul};
-
 use bevy::prelude::*;
 use leafwing_input_manager::{prelude::{ActionState, InputMap}, Actionlike, InputManagerBundle};
 use lightyear::prelude::{client, ClientId, PrePredicted, ReplicateHierarchy, ReplicationGroup};
@@ -14,6 +12,8 @@ pub const REPLICATION_GROUP: ReplicationGroup = ReplicationGroup::new_id(1);
 pub enum PlayerActions {
     #[actionlike(DualAxis)]
     Move,
+    #[actionlike(TripleAxis)]
+    CursorWorldspace,
     Dodge,
     PrimaryAttack,
 }
@@ -41,32 +41,6 @@ pub struct PlayerBundle {
     life: LifePool,
 }
 
-#[derive(Component, Serialize, Deserialize, PartialEq, Clone, Reflect)]
-pub struct CursorPosition(pub Vec3);
-
-#[derive(Bundle)]
-pub struct CursorBundle {
-    pub position: CursorPosition,
-    pub replicate: client::Replicate,
-}
-
-impl Add for CursorPosition {
-    type Output = CursorPosition;
-    #[inline]
-    fn add(self, rhs: CursorPosition) -> CursorPosition {
-        CursorPosition(self.0.add(rhs.0))
-    }
-}
-
-impl Mul<f32> for &CursorPosition {
-    type Output = CursorPosition;
-
-    fn mul(self, rhs: f32) -> Self::Output {
-        CursorPosition(self.0 * rhs)
-    }
-}
-
-
 impl PlayerBundle {
     pub fn new(id: ClientId, position: Vec2, input_map: InputMap<PlayerActions>) -> Self {
         Self {
@@ -86,7 +60,7 @@ impl PlayerBundle {
             physics: PhysicsBundle::player(),
             pre_predicted: PrePredicted::default(),
             move_speed: MoveSpeed(12.),
-            name: Name::from("Player"),
+            name: Name::from(format!("Player {}", id)),
             life: LifePool::new(Life(100.), Life(100.), Life(5.)),
         }
     }
@@ -120,6 +94,7 @@ pub fn shared_player_movement(
     character.external_force.apply_force(required_accel * character.mass.0);
 
     if action.just_pressed(&PlayerActions::Dodge) {
-        character.external_impulse.apply_impulse(move_dir.normalize_or_zero() * move_speed.0 * 2.);
+        let dodge_dir = action.axis_triple(&PlayerActions::CursorWorldspace) - **character.position;
+        character.external_impulse.apply_impulse(dodge_dir.normalize_or_zero() * move_speed.0 * 2.);
     }
 }

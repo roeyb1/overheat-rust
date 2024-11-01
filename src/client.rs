@@ -1,9 +1,9 @@
-use bevy::{math::VectorSpace, prelude::*};
+use bevy::prelude::*;
 use leafwing_input_manager::prelude::{ActionState, InputMap, KeyboardVirtualDPad, WithDualAxisProcessingPipelineExt};
-use lightyear::{prelude::{client::{ClientCommands, Interpolated, Predicted, PredictionSet, Replicate}, MainSet}, shared::replication::components::Controlled};
+use lightyear::{prelude::{client::{ClientCommands, Interpolated, Predicted, PredictionSet}, MainSet}, shared::replication::components::Controlled};
 use lightyear::client::events::*;
 
-use crate::{physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, CursorBundle, CursorPosition, MoveSpeed, PlayerActions, PlayerBundle}, shared::FixedSet};
+use crate::{physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, MoveSpeed, PlayerActions, PlayerBundle}, shared::FixedSet};
 
 pub struct OverheatClientPlugin;
 
@@ -17,10 +17,11 @@ impl Plugin for OverheatClientPlugin {
                 .after(MainSet::Receive)
                 .before(PredictionSet::SpawnPrediction)
         )
-        .add_systems(FixedUpdate, 
+        .add_systems(FixedUpdate, ( 
             predicted_player_movement
-                .in_set(FixedSet::Main)
-        )
+                .in_set(FixedSet::Main),
+            cursor_movement,
+        ))
         .add_systems(
             Update, (
                 finalize_remote_player_spawn,
@@ -70,11 +71,6 @@ fn handle_connection(
 
         let camera_entity = cam_query.single();
         commands.entity(player).add_child(camera_entity);
-
-        commands.spawn(CursorBundle {
-            position: CursorPosition(Vec3::ZERO),
-            replicate: Replicate::default(),
-        });
     }
 }
 
@@ -127,7 +123,7 @@ fn handle_interpolated_spawn(
 fn cursor_movement(
     window_query: Query<&Window>,
     camera_query: Query<(&GlobalTransform, &Camera)>,
-    mut cusor_query: Query<&mut CursorPosition, With<Controlled>>,
+    mut cusor_query: Query<&mut ActionState<PlayerActions>, With<Controlled>>,
 ) {
     if let Ok(window) = window_query.get_single() {
         if let Some(cursor_pos) = window.cursor_position() {
@@ -136,8 +132,11 @@ fn cursor_movement(
                     let t = ray.intersect_plane(Vec3::splat(0.), InfinitePlane3d::new(Vec3::new(0.0, 1., 0.)));
 
                     if let Some(t) = t {
-                        for mut cursor_pos in cusor_query.iter_mut() {
-                            cursor_pos.set_if_neq(CursorPosition(ray.get_point(t)));
+                        for mut actions in cusor_query.iter_mut() {
+                            let worldspace = ray.get_point(t);
+                            if actions.axis_triple(&PlayerActions::CursorWorldspace) != worldspace {
+                                actions.set_axis_triple(&PlayerActions::CursorWorldspace, worldspace);
+                            }
                         }
                     }
                 }

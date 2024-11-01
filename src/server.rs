@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use leafwing_input_manager::prelude::ActionState;
-use lightyear::prelude::{server::{AuthorityPeer, ControlledBy, Replicate, ServerCommands, ServerReplicationSet, SyncTarget}, InputChannel, InputMessage, MainSet, NetworkTarget, OverrideTargetComponent, PrePredicted, Replicated, ReplicationTarget};
+use lightyear::prelude::{server::{ControlledBy, Replicate, ServerCommands, ServerReplicationSet, SyncTarget}, InputChannel, InputMessage, MainSet, NetworkTarget, OverrideTargetComponent, PrePredicted, Replicated};
 use lightyear::server::{connection::ConnectionManager, events::MessageEvent};
 
-use crate::{physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, CursorPosition, MoveSpeed, PlayerActions, PlayerId, REPLICATION_GROUP}, shared::FixedSet};
+use crate::{physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, MoveSpeed, PlayerActions, PlayerId, REPLICATION_GROUP}, shared::FixedSet};
 
 pub struct OverheatServerPlugin {
     pub predict_all: bool,
@@ -29,7 +29,6 @@ impl Plugin for OverheatServerPlugin {
         .add_systems(
             PreUpdate, (
                 replicate_players,
-                replicate_cursors,
             ).in_set(ServerReplicationSet::ClientReplication)
         )
         .add_systems(
@@ -112,35 +111,6 @@ fn replicate_players(
                 OverrideTargetComponent::<PrePredicted>::new(NetworkTarget::Single(client_id)),
                 PhysicsBundle::player(),
             ));
-        }
-    }
-}
-
-fn replicate_cursors(
-    mut commands: Commands,
-    query: Query<(Entity, &Replicated), (Added<Replicated>, With<CursorPosition>)>,
-) {
-    for (entity, replicated) in &query {
-        let client_id = replicated.client_id();
-
-        if let Some(mut e) = commands.get_entity(entity) {
-            e.insert(Replicate {
-                target: ReplicationTarget {
-                    // don't need to replicate this back to the client that owns it
-                    target: NetworkTarget::AllExceptSingle(client_id),
-                },
-                authority: AuthorityPeer::Client(client_id),
-                sync: SyncTarget {
-                    // other clients should interpolate the cursor pos
-                    interpolation: NetworkTarget::AllExceptSingle(client_id),
-                    ..default()
-                },
-                controlled_by: ControlledBy {
-                    target: NetworkTarget::Single(client_id),
-                    ..default()
-                },
-                ..default()
-            });
         }
     }
 }
