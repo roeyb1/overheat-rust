@@ -55,7 +55,7 @@ impl PlayerBundle {
             spatial: SpatialBundle::default(),
             physics: PhysicsBundle::player(),
             pre_predicted: PrePredicted::default(),
-            move_speed: MoveSpeed(10.),
+            move_speed: MoveSpeed(12.),
             name: Name::from("Player"),
         }
     }
@@ -69,11 +69,13 @@ pub fn shared_player_movement(
 ) {
     use std::f32::consts::PI;
 
-    const MAX_ACCEL: f32 = 20.;
+    const MAX_ACCEL: f32 = 200.;
     
     let max_velocity_delta_per_tick = MAX_ACCEL * time.delta_seconds();
 
-    let input_dir = action.axis_pair(&PlayerActions::Move).clamp_length_max(1.);
+    let mut input_dir = action.axis_pair(&PlayerActions::Move).clamp_length_max(1.);
+    // due to skewed camera angle, it feels better if the player moves faster in the y axis than in the x axis.
+    input_dir.y *= 1.5;
     let move_dir = Vec2::from_angle(-PI / 4.).rotate(input_dir);
     let move_dir = Vec3::new(move_dir.x, 0., move_dir.y);
 

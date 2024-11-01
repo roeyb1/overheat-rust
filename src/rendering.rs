@@ -69,7 +69,7 @@ fn init(
                 scaling_mode: ScalingMode::FixedVertical(15.0),
                 ..default()
             }.into(),
-            transform: Transform::from_xyz(22., 22., 22.).looking_at(Vec3::splat(0.), Vec3::Y),
+            transform: Transform::from_xyz(22., 18., 22.).looking_at(Vec3::splat(0.), Vec3::Y),
             ..default()
         },
         BloomSettings {

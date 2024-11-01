@@ -36,7 +36,7 @@ impl PhysicsBundle {
                 .lock_rotation_y()
                 .lock_rotation_z()
                 .lock_translation_y(),
-            friction: Friction::new(0.).with_combine_rule(CoefficientCombine::Min),
+            friction: Friction::new(1.).with_combine_rule(CoefficientCombine::Min),
         }
     }
 }
