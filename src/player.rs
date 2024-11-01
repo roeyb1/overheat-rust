@@ -3,7 +3,7 @@ use leafwing_input_manager::{prelude::{ActionState, InputMap}, Actionlike, Input
 use lightyear::prelude::{client, ClientId, PrePredicted, ReplicateHierarchy, ReplicationGroup};
 use serde::{Deserialize, Serialize};
 
-use crate::physics::{CharacterQueryItem, PhysicsBundle};
+use crate::{ability::pools::life::{Life, LifePool}, physics::{CharacterQueryItem, PhysicsBundle}};
 
 
 pub const REPLICATION_GROUP: ReplicationGroup = ReplicationGroup::new_id(1);
@@ -35,6 +35,8 @@ pub struct PlayerBundle {
 
     // #todo: move
     move_speed: MoveSpeed,
+
+    life: LifePool,
 }
 
 impl PlayerBundle {
@@ -57,6 +59,7 @@ impl PlayerBundle {
             pre_predicted: PrePredicted::default(),
             move_speed: MoveSpeed(12.),
             name: Name::from("Player"),
+            life: LifePool::new(Life(100.), Life(100.), Life(5.)),
         }
     }
 }
@@ -87,4 +90,8 @@ pub fn shared_player_movement(
     let required_accel = (new_velocity - current_velocity) / time.delta_seconds();
 
     character.external_force.apply_force(required_accel * character.mass.0);
+
+    if action.just_pressed(&PlayerActions::Dodge) {
+        character.external_impulse.apply_impulse(move_dir.normalize_or_zero() * move_speed.0 * 2.);
+    }
 }

@@ -58,7 +58,7 @@ fn handle_connection(
                 client_id,
                 Vec2::new(0., 0.),
                 InputMap::new([
-                    (PlayerActions::Dodge, KeyCode::KeyW),
+                    (PlayerActions::Dodge, KeyCode::Space),
                 ])
                 .with_dual_axis(
                     PlayerActions::Move, KeyboardVirtualDPad::WASD
