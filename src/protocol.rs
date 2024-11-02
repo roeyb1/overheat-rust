@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use lightyear::{prelude::{client::ComponentSyncMode, AppComponentExt, ChannelDirection}, utils::avian3d::{position, rotation}};
 use lightyear::shared::input::leafwing::LeafwingInputPlugin;
 
-use crate::{ability::pools::life::LifePool, player::{MoveSpeed, PlayerActions, PlayerId}};
+use crate::{ability::pools::life::LifePool, player::{CursorPosition, MoveSpeed, PlayerActions, PlayerId}};
 
 pub struct ProtocolPlugin;
 
@@ -36,6 +36,11 @@ impl Plugin for ProtocolPlugin {
             .add_prediction(ComponentSyncMode::Full);
         app.register_component::<AngularVelocity>(ChannelDirection::Bidirectional)
             .add_prediction(ComponentSyncMode::Full);
+
+        app.register_component::<CursorPosition>(ChannelDirection::Bidirectional)
+            .add_prediction(ComponentSyncMode::Full)
+            .add_interpolation(ComponentSyncMode::Full)
+            .add_linear_interpolation_fn();
 
         app.register_component::<LifePool>(ChannelDirection::Bidirectional)
             .add_prediction(ComponentSyncMode::Full);
