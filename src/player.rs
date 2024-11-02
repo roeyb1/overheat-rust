@@ -5,7 +5,7 @@ use leafwing_input_manager::{prelude::{ActionState, InputMap}, Actionlike, Input
 use lightyear::prelude::{client, ClientId, PrePredicted, ReplicateHierarchy, ReplicationGroup};
 use serde::{Deserialize, Serialize};
 
-use crate::{ability::pools::life::{Life, LifePool}, physics::{CharacterQueryItem, PhysicsBundle}};
+use crate::{ability::{ability_map::AbilityMap, pools::{life::{Life, LifePool}, mana::{Mana, ManaPool}}}, physics::{CharacterQueryItem, PhysicsBundle}};
 
 
 pub const REPLICATION_GROUP: ReplicationGroup = ReplicationGroup::new_id(1);
@@ -39,6 +39,9 @@ pub struct PlayerBundle {
     move_speed: MoveSpeed,
 
     life: LifePool,
+    mana: ManaPool,
+
+    ability_bindings: AbilityMap<PlayerActions>,
 }
 
 #[derive(Component, Serialize, Deserialize, PartialEq, Clone, Reflect)]
@@ -68,7 +71,7 @@ impl Mul<f32> for &CursorPosition {
 
 
 impl PlayerBundle {
-    pub fn new(id: ClientId, position: Vec2, input_map: InputMap<PlayerActions>) -> Self {
+    pub fn new(id: ClientId, position: Vec2, input_map: InputMap<PlayerActions>, abilities: AbilityMap<PlayerActions>) -> Self {
         Self {
             id: PlayerId(id),
             replicate: client::Replicate {
@@ -88,6 +91,8 @@ impl PlayerBundle {
             move_speed: MoveSpeed(12.),
             name: Name::from("Player"),
             life: LifePool::new(Life(100.), Life(100.), Life(5.)),
+            mana: ManaPool::new(Mana(100.), Mana(100.), Mana(5.)),
+            ability_bindings: abilities,
         }
     }
 }

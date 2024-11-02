@@ -3,7 +3,7 @@ use leafwing_input_manager::prelude::ActionState;
 use lightyear::prelude::{server::{AuthorityPeer, ControlledBy, Replicate, ServerCommands, ServerReplicationSet, SyncTarget}, InputChannel, InputMessage, MainSet, NetworkTarget, OverrideTargetComponent, PrePredicted, Replicated, ReplicationTarget};
 use lightyear::server::{connection::ConnectionManager, events::MessageEvent};
 
-use crate::{physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, CursorPosition, MoveSpeed, PlayerActions, PlayerId, REPLICATION_GROUP}, shared::FixedSet};
+use crate::{ability::{ability_map::AbilityMap, Ability}, physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, CursorPosition, MoveSpeed, PlayerActions, PlayerId, REPLICATION_GROUP}, shared::FixedSet};
 
 pub struct OverheatServerPlugin {
     pub predict_all: bool,
@@ -33,10 +33,12 @@ impl Plugin for OverheatServerPlugin {
             ).in_set(ServerReplicationSet::ClientReplication)
         )
         .add_systems(
-            FixedUpdate,
+            FixedUpdate, (
             movement
-                .in_set(FixedSet::Main)
-        );
+                .in_set(FixedSet::Main),
+            trigger_bound_abilities
+                .in_set(FixedSet::Main),
+        ));
     }
 }
 
@@ -151,5 +153,28 @@ fn movement(
 ) {
     for (mut character, move_speed, action_state) in &mut query {
         shared_player_movement(&time, move_speed, action_state, &mut character);
+    }
+}
+
+fn trigger_bound_abilities(
+    action_query: Query<(&ActionState<PlayerActions>, &AbilityMap<PlayerActions>)>,
+    mut ability_query: Query<&mut Ability>,
+) {
+    for (actions, map) in &action_query {
+        for pressed in actions.get_just_pressed() {
+            if let Ok(ability_entity) = map.mapped(pressed) {
+                if let Ok(mut ability) = ability_query.get_mut(ability_entity) {
+
+                    match ability.cooldown.trigger() {
+                        Ok(_) => {
+                            info!("Triggered ability: {:?}", ability.cooldown);
+                        },
+                        Err(_) => {
+                            info!("Failed triggering ability: {:?}", ability.cooldown);
+                        },
+                    }
+                }
+            }
+        }
     }
 }

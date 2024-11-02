@@ -2,16 +2,16 @@ pub mod life {
     use core::ops::{Div, Mul};
     use std::{fmt::Display, time::Duration};
 
-    use bevy::prelude::Component;
+    use bevy::{prelude::Component, reflect::Reflect};
     use derive_more::derive::{Add, AddAssign, Sub, SubAssign};
     use serde::{Deserialize, Serialize};
 
     use crate::ability::pool::{MaxPoolLessThanMin, Pool, RegeneratingPool};
 
-    #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default, Add, Sub, AddAssign, SubAssign, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default, Add, Sub, AddAssign, SubAssign, Serialize, Deserialize, Reflect)]
     pub struct Life(pub f32);
 
-    #[derive(Component, Serialize, Deserialize, PartialEq, Clone)]
+    #[derive(Component, Serialize, Deserialize, PartialEq, Clone, Reflect)]
     pub struct LifePool {
         current: Life,
         max: Life,
@@ -129,16 +129,16 @@ pub mod mana {
     use core::ops::{Div, Mul};
     use std::{fmt::Display, time::Duration};
 
-    use bevy::prelude::Component;
+    use bevy::{prelude::Component, reflect::Reflect};
     use derive_more::derive::{Add, AddAssign, Sub, SubAssign};
     use serde::{Deserialize, Serialize};
 
     use crate::ability::pool::{MaxPoolLessThanMin, Pool, RegeneratingPool};
 
-    #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default, Add, Sub, AddAssign, SubAssign, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default, Add, Sub, AddAssign, SubAssign, Serialize, Deserialize, Reflect)]
     pub struct Mana(pub f32);
 
-    #[derive(Component, Serialize, Deserialize)]
+    #[derive(Component, Serialize, Deserialize, PartialEq, Clone, Reflect)]
     pub struct ManaPool {
         current: Mana,
         max: Mana,

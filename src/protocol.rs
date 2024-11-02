@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use lightyear::{prelude::{client::ComponentSyncMode, AppComponentExt, ChannelDirection}, utils::avian3d::{position, rotation}};
 use lightyear::shared::input::leafwing::LeafwingInputPlugin;
 
-use crate::{ability::pools::life::LifePool, player::{CursorPosition, MoveSpeed, PlayerActions, PlayerId}};
+use crate::{ability::{ability_map::AbilityMap, pools::{life::LifePool, mana::ManaPool}, Ability}, player::{CursorPosition, MoveSpeed, PlayerActions, PlayerId}};
 
 pub struct ProtocolPlugin;
 
@@ -43,6 +43,15 @@ impl Plugin for ProtocolPlugin {
             .add_linear_interpolation_fn();
 
         app.register_component::<LifePool>(ChannelDirection::Bidirectional)
+            .add_prediction(ComponentSyncMode::Full);
+
+        app.register_component::<ManaPool>(ChannelDirection::Bidirectional)
+            .add_prediction(ComponentSyncMode::Full);
+
+        //  sync ability states
+        app.register_component::<Ability>(ChannelDirection::Bidirectional)
+            .add_prediction(ComponentSyncMode::Full);
+        app.register_component::<AbilityMap<PlayerActions>>(ChannelDirection::Bidirectional)
             .add_prediction(ComponentSyncMode::Full);
     }
 }

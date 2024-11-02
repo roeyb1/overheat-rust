@@ -1,7 +1,7 @@
-use core::ops::{Add, AddAssign, Sub, SubAssign};
+use core::{fmt, ops::{Add, AddAssign, Sub, SubAssign}};
 use std::time::Duration;
 
-use bevy::{prelude::{Component, Query, Res}, time::Time};
+use bevy::{prelude::{Component, Query, Res}, reflect::Reflect, time::Time};
 use serde::{Deserialize, Serialize};
 
 use super::CannotUseAbility;
@@ -61,6 +61,7 @@ pub trait RegeneratingPool: Pool {
     fn regenerate(&mut self, delta_time: Duration);
 }
 
+#[derive(Serialize, Deserialize, PartialEq, Clone, Reflect)]
 pub struct AbilityCost<P: Pool>(pub P::Quantity);
 
 #[derive(Component, Debug, Default, Serialize, Deserialize)]
