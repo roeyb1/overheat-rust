@@ -35,13 +35,11 @@ impl Plugin for OverheatServerPlugin {
                 replicate_cursors,
             ).in_set(ServerReplicationSet::ClientReplication)
         )
-        .add_systems(FixedPreUpdate, (
-            trigger_bound_abilities,
-        ))
         .add_systems(
             FixedUpdate, (
                 movement,
                 test_handle_abilities,
+                trigger_bound_abilities,
             )
             .in_set(FixedSet::Main),
         );

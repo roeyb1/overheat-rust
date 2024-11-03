@@ -18,11 +18,9 @@ impl Plugin for OverheatClientPlugin {
                 .after(MainSet::Receive)
                 .before(PredictionSet::SpawnPrediction)
         )
-        .add_systems(FixedPreUpdate, (
-                trigger_predicted_abilities,
-        ))
         .add_systems(FixedUpdate, (
                 predicted_player_movement,
+                trigger_predicted_abilities,
             )
             .in_set(FixedSet::Main)
         )
