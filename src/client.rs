@@ -1,6 +1,7 @@
 use bevy::prelude::*;
+use bevy_inspector_egui::quick::FilterQueryInspectorPlugin;
 use leafwing_input_manager::prelude::{ActionState, InputMap, KeyboardVirtualDPad, WithDualAxisProcessingPipelineExt};
-use lightyear::{prelude::{client::{ClientCommands, Interpolated, Predicted, PredictionSet, Replicate}, MainSet}, shared::replication::components::Controlled};
+use lightyear::{prelude::{client::{ClientCommands, Confirmed, Interpolated, Predicted, PredictionSet, Replicate}, MainSet}, shared::replication::components::Controlled};
 use lightyear::client::events::*;
 
 use crate::{ability_framework::{ability_map::AbilityMap, pools::{life::LifePool, mana::ManaPool}, AbilityFrameworkClientPlugin, AbilityState, PredictedAbility, TriggerAbility}, physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, CursorBundle, CursorPosition, MoveSpeed, PlayerActions, PlayerBundle, PlayerId}, shared::FixedSet};
@@ -9,22 +10,24 @@ pub struct OverheatClientPlugin;
 
 impl Plugin for OverheatClientPlugin {
     fn build(&self, app: &mut App) {
-        app
-        .add_plugins(AbilityFrameworkClientPlugin)
-        .add_systems(Startup, init)
-        .add_systems(
+        app.add_plugins(FilterQueryInspectorPlugin::<With<Predicted>>::default());
+        app.add_plugins(FilterQueryInspectorPlugin::<With<Confirmed>>::default());
+
+        app.add_plugins(AbilityFrameworkClientPlugin);
+        app.add_systems(Startup, init);
+        app.add_systems(
             PreUpdate,
             handle_connection
                 .after(MainSet::Receive)
                 .before(PredictionSet::SpawnPrediction)
-        )
-        .add_systems(FixedUpdate, (
+        );
+        app.add_systems(FixedUpdate, (
                 predicted_player_movement,
                 trigger_predicted_abilities,
             )
             .in_set(FixedSet::Main)
-        )
-        .add_systems(
+        );
+        app.add_systems(
             Update, (
                 finalize_remote_player_spawn,
                 handle_predicted_spawn,

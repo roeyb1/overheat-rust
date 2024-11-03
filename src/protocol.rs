@@ -44,9 +44,13 @@ impl Plugin for ProtocolPlugin {
 
         app.register_component::<LifePool>(ChannelDirection::Bidirectional)
             .add_prediction(ComponentSyncMode::Full);
+        app.register_component::<AbilityCost<LifePool>>(ChannelDirection::Bidirectional)
+            .add_prediction(ComponentSyncMode::Simple);
 
         app.register_component::<ManaPool>(ChannelDirection::Bidirectional)
             .add_prediction(ComponentSyncMode::Full);
+        app.register_component::<AbilityCost<ManaPool>>(ChannelDirection::Bidirectional)
+            .add_prediction(ComponentSyncMode::Simple);
 
         //  sync ability states
         app.register_component::<Ability>(ChannelDirection::ServerToClient)
