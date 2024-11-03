@@ -5,7 +5,7 @@ use leafwing_input_manager::prelude::ActionState;
 use lightyear::prelude::{server::{AuthorityPeer, ControlledBy, Replicate, ServerCommands, ServerReplicationSet, SyncTarget}, InputChannel, InputMessage, MainSet, NetworkTarget, OverrideTargetComponent, PrePredicted, Replicated, ReplicationTarget};
 use lightyear::server::{connection::ConnectionManager, events::MessageEvent};
 
-use crate::{ability_framework::{ability_map::AbilityMap, pools::{life::LifePool, mana::ManaPool}, Ability, AbilityBundle, AbilityState, PredictedAbility, TriggerAbility}, physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, CursorPosition, MoveSpeed, PlayerActions, PlayerId, REPLICATION_GROUP}, shared::FixedSet};
+use crate::{abilities::Dodge, ability_framework::{ability_map::AbilityMap, pools::{life::LifePool, mana::ManaPool}, Ability, AbilityBundle, AbilityState, PredictedAbility, TriggerAbility}, physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, CursorPosition, MoveSpeed, PlayerActions, PlayerId, REPLICATION_GROUP}, shared::FixedSet};
 
 pub struct OverheatServerPlugin {
     pub predict_all: bool,
@@ -39,10 +39,11 @@ impl Plugin for OverheatServerPlugin {
         ))
         .add_systems(
             FixedUpdate, (
-                movement
-                    .in_set(FixedSet::Main),
+                movement,
                 test_handle_abilities,
-        ));
+            )
+            .in_set(FixedSet::Main),
+        );
     }
 }
 
@@ -123,19 +124,20 @@ fn replicate_players(
             ));
 
             // #todo: temporarily set up some default abilities for testing
-            let test_ability = commands.spawn((
-                AbilityBundle::new(50., 0., Duration::from_secs_f32(2.)),
+            let dodge_ability = commands.spawn((
+                AbilityBundle::new(10., 0., Duration::from_secs_f32(2.)),
                 Replicate {
                     sync: sync_target.clone(),
                     group: REPLICATION_GROUP,
                     ..default()
                 },
+                Dodge,
                 PredictedAbility,
-                Name::from("TestAbility"),
+                Name::from("DodgeAbility"),
             )).id();
 
             let mut ability_map = AbilityMap::new();
-            ability_map.add_binding(PlayerActions::PrimaryAttack, test_ability);
+            ability_map.add_binding(PlayerActions::Dodge, dodge_ability);
 
             commands.entity(player).insert(ability_map);
         }
@@ -181,18 +183,21 @@ fn movement(
 }
 
 fn trigger_bound_abilities(
-    mut action_query: Query<(&ActionState<PlayerActions>, &AbilityMap<PlayerActions>, &mut LifePool, &mut ManaPool)>,
+    mut action_query: Query<(Entity, &ActionState<PlayerActions>, &AbilityMap<PlayerActions>, &mut LifePool, &mut ManaPool)>,
     mut triggers: EventWriter<TriggerAbility>,
     mut ability_query: Query<AbilityState>,
 ) {
-    for (actions, map, mut life, mut mana) in action_query.iter_mut() {
+    for (entity, actions, map, mut life, mut mana) in action_query.iter_mut() {
         for pressed in actions.get_just_pressed() {
             if let Ok(ability_entity) = map.mapped(pressed) {
                 if let Ok(mut ability) = ability_query.get_mut(ability_entity) {
 
                     match ability.trigger(&mut mana, &mut life) {
                         Ok(()) => {
-                            triggers.send(TriggerAbility(ability_entity));
+                            triggers.send(TriggerAbility {
+                                source: entity,
+                                ability: ability_entity,
+                            });
                         },
                         Err(e) => {
                             info!("Failed triggering ability: {e:?}");
@@ -208,6 +213,6 @@ fn test_handle_abilities(
     mut triggers: EventReader<TriggerAbility>,
 ) {
     for trigger in triggers.read() {
-        info!("Triggered ability {:?}", trigger.0);
+        info!("Triggered ability {:?}", trigger.ability);
     }
 }

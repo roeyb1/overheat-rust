@@ -18,6 +18,7 @@ mod assets;
 mod rendering;
 mod animation;
 mod ability_framework;
+mod abilities;
 
 pub const FIXED_TIMESTEP_HZ: f64 = 64.;
 pub const REPLICATION_INTERVAL: Duration = Duration::from_millis(100);

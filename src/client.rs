@@ -17,9 +17,11 @@ impl Plugin for OverheatClientPlugin {
                 .after(MainSet::Receive)
                 .before(PredictionSet::SpawnPrediction)
         )
+        .add_systems(FixedPreUpdate, (
+                trigger_predicted_abilities,
+        ))
         .add_systems(FixedUpdate, (
                 predicted_player_movement,
-                trigger_predicted_abilities,
             )
             .in_set(FixedSet::Main)
         )
@@ -152,22 +154,22 @@ fn cursor_movement(
 }
 
 fn trigger_predicted_abilities(
-    mut action_query: Query<(&ActionState<PlayerActions>, &AbilityMap<PlayerActions>, &mut LifePool, &mut ManaPool), With<Predicted>>,
+    mut action_query: Query<(Entity, &ActionState<PlayerActions>, &AbilityMap<PlayerActions>, &mut LifePool, &mut ManaPool), With<Predicted>>,
     mut triggers: EventWriter<TriggerAbility>,
     mut ability_query: Query<AbilityState, With<PredictedAbility>>,
 ) {
-    for (actions, map, mut life, mut mana) in action_query.iter_mut() {
+    for (entity, actions, map, mut life, mut mana) in action_query.iter_mut() {
         for pressed in actions.get_just_pressed() {
             if let Ok(ability_entity) = map.mapped(pressed) {
                 if let Ok(mut ability) = ability_query.get_mut(ability_entity) {
                     match ability.trigger(&mut mana, &mut life) {
                         Ok(()) => {
-                            info!("Trigger");
-                            triggers.send(TriggerAbility(ability_entity));
+                            triggers.send(TriggerAbility {
+                                source: entity,
+                                ability: ability_entity,
+                            });
                         },
-                        Err(e) => {
-                            info!("Failed triggering ability: {e:?}");
-                        },
+                        Err(_) => {},
                     }
                 }
             }

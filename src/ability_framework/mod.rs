@@ -11,9 +11,9 @@ pub mod pool;
 pub mod pools;
 pub mod ability_map;
 
-pub struct AbilitiesPlugin;
+pub struct AbilityFrameworkPlugin;
 
-impl Plugin for AbilitiesPlugin {
+impl Plugin for AbilityFrameworkPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app
         .add_systems(FixedUpdate, (
@@ -112,7 +112,12 @@ impl AbilityStateItem<'_> {
 }
 
 #[derive(Event)]
-pub struct TriggerAbility(pub Entity);
+pub struct TriggerAbility {
+    /// Source entity that triggered the ability
+    pub source: Entity,
+    /// Entity which describes the ability being triggered
+    pub ability: Entity,
+}
 
 #[derive(Debug)]
 pub enum CannotUseAbility {

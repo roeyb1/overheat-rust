@@ -120,8 +120,4 @@ pub fn shared_player_movement(
     let required_accel = (new_velocity - current_velocity) / time.delta_seconds();
 
     character.external_force.apply_force(required_accel * character.mass.0);
-
-    if action.just_pressed(&PlayerActions::Dodge) {
-        character.external_impulse.apply_impulse(move_dir.normalize_or_zero() * move_speed.0 * 2.);
-    }
 }
