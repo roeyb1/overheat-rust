@@ -5,7 +5,7 @@ use leafwing_input_manager::prelude::ActionState;
 use lightyear::prelude::{server::{AuthorityPeer, ControlledBy, Replicate, ServerCommands, ServerReplicationSet, SyncTarget}, InputChannel, InputMessage, MainSet, NetworkTarget, OverrideTargetComponent, PrePredicted, Replicated, ReplicationTarget};
 use lightyear::server::{connection::ConnectionManager, events::MessageEvent};
 
-use crate::{abilities::Dodge, ability_framework::{ability_map::AbilityMap, pools::{life::LifePool, mana::ManaPool}, Ability, AbilityBundle, AbilityState, PredictedAbility, TriggerAbility}, physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, CursorPosition, MoveSpeed, PlayerActions, PlayerId, REPLICATION_GROUP}, shared::FixedSet};
+use crate::{abilities::Dodge, ability_framework::{ability_map::AbilityMap, pools::{life::LifePool, mana::ManaPool}, Ability, AbilityBundle, AbilityFrameworkServerPlugin, AbilityState, PredictedAbility, TriggerAbility}, physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, CursorPosition, MoveSpeed, PlayerActions, PlayerId, REPLICATION_GROUP}, shared::FixedSet};
 
 pub struct OverheatServerPlugin {
     pub predict_all: bool,
@@ -19,6 +19,7 @@ pub struct Global {
 impl Plugin for OverheatServerPlugin {
     fn build(&self, app: &mut App) {
         app
+        .add_plugins(AbilityFrameworkServerPlugin)
         .insert_resource(Global {
             predict_all: self.predict_all
         })
@@ -188,7 +189,7 @@ fn trigger_bound_abilities(
     mut ability_query: Query<AbilityState>,
 ) {
     for (entity, actions, map, mut life, mut mana) in action_query.iter_mut() {
-        for pressed in actions.get_just_pressed() {
+        for pressed in actions.get_pressed() {
             if let Ok(ability_entity) = map.mapped(pressed) {
                 if let Ok(mut ability) = ability_query.get_mut(ability_entity) {
 

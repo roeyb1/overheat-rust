@@ -1,12 +1,16 @@
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 use std::time::Duration;
 
-use bevy::{prelude::{Component, Query, Res}, reflect::Reflect, time::Time};
+use bevy::{prelude::{Component, Query, Res, With}, reflect::Reflect, time::Time};
+use lightyear::prelude::client::Predicted;
 use serde::{Deserialize, Serialize};
 
 use super::CannotUseAbility;
 
 pub struct MaxPoolLessThanMin;
+
+#[derive(Component, Serialize, Deserialize, PartialEq, Clone, Reflect)]
+pub struct AbilityCost<P: Pool>(pub P::Quantity);
 
 pub trait Pool: Sized {
     type Quantity: Add<Output = Self::Quantity>
@@ -61,9 +65,6 @@ pub trait RegeneratingPool: Pool {
     fn regenerate(&mut self, delta_time: Duration);
 }
 
-#[derive(Component, Serialize, Deserialize, PartialEq, Clone, Reflect)]
-pub struct AbilityCost<P: Pool>(pub P::Quantity);
-
 #[derive(Component, Debug, Default, Serialize, Deserialize)]
 pub struct NullPool;
 
@@ -91,6 +92,17 @@ impl Pool for NullPool {
 
 pub fn tick_pools_regen<P: RegeneratingPool + Component>(
     mut query: Query<&mut P>,
+    time: Res<Time>
+) {
+    let delta_time = time.delta();
+
+    for mut pool in query.iter_mut() {
+        pool.regenerate(delta_time);
+    }
+}
+
+pub fn predict_tick_pools_regen<P: RegeneratingPool + Component>(
+    mut query: Query<&mut P, With<Predicted>>,
     time: Res<Time>
 ) {
     let delta_time = time.delta();

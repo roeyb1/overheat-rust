@@ -2,7 +2,8 @@ use std::time::Duration;
 
 use bevy::{ecs::query::QueryData, prelude::*};
 use cooldown::Cooldown;
-use pool::{tick_pools_regen, AbilityCost, Pool};
+use lightyear::prelude::client::Predicted;
+use pool::{predict_tick_pools_regen, tick_pools_regen, AbilityCost, Pool};
 use pools::{life::{Life, LifePool}, mana::{Mana, ManaPool}};
 use serde::{Deserialize, Serialize};
 
@@ -11,15 +12,28 @@ pub mod pool;
 pub mod pools;
 pub mod ability_map;
 
-pub struct AbilityFrameworkPlugin;
+pub struct AbilityFrameworkServerPlugin;
 
-impl Plugin for AbilityFrameworkPlugin {
+impl Plugin for AbilityFrameworkServerPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app
         .add_systems(FixedUpdate, (
             tick_pools_regen::<LifePool>,
             tick_pools_regen::<ManaPool>,
             tick_ability_cds,
+        ));
+    }
+}
+
+pub struct AbilityFrameworkClientPlugin;
+
+impl Plugin for AbilityFrameworkClientPlugin {
+    fn build(&self, app: &mut bevy::prelude::App) {
+        app
+        .add_systems(FixedUpdate, (
+            predict_tick_pools_regen::<LifePool>,
+            predict_tick_pools_regen::<ManaPool>,
+            predict_tick_ability_cds,
         ));
     }
 }
@@ -130,6 +144,15 @@ pub enum CannotUseAbility {
 fn tick_ability_cds(
     time: Res<Time>,
     mut query: Query<&mut Cooldown, With<Ability>>
+) {
+    for mut cd in query.iter_mut() {
+        cd.tick(time.delta());
+    }
+}
+
+fn predict_tick_ability_cds(
+    time: Res<Time>,
+    mut query: Query<&mut Cooldown, (With<Ability>, With<Predicted>)>
 ) {
     for mut cd in query.iter_mut() {
         cd.tick(time.delta());

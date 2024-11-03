@@ -22,13 +22,6 @@ impl Plugin for OverheatRenderPlugin {
                 .load_collection::<PlayerAssets>()
         );
 
-        app.add_plugins(LogDiagnosticsPlugin {
-            filter: Some(vec![
-                IoDiagnosticsPlugin::BYTES_IN,
-                IoDiagnosticsPlugin::BYTES_OUT,
-            ]),
-            ..default()
-        });
         app.add_plugins(ScreenDiagnosticsPlugin::default());
         app.insert_resource(Msaa::Off);
 
