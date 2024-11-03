@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::{ecs::entity::MapEntities, prelude::*};
+use bevy::prelude::*;
 use cooldown::Cooldown;
 use pool::{tick_pools_regen, AbilityCost};
 use pools::{life::{Life, LifePool}, mana::{Mana, ManaPool}};
@@ -40,6 +40,9 @@ impl Ability {
         }
     }
 }
+
+#[derive(Event)]
+pub struct TriggerAbility(pub Entity);
 
 #[derive(Debug)]
 pub enum CannotUseAbility {

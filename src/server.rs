@@ -5,7 +5,7 @@ use leafwing_input_manager::prelude::ActionState;
 use lightyear::prelude::{server::{AuthorityPeer, ControlledBy, Replicate, ServerCommands, ServerReplicationSet, SyncTarget}, InputChannel, InputMessage, MainSet, NetworkTarget, OverrideTargetComponent, PrePredicted, Replicated, ReplicationTarget};
 use lightyear::server::{connection::ConnectionManager, events::MessageEvent};
 
-use crate::{ability::{ability_map::AbilityMap, Ability}, physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, CursorPosition, MoveSpeed, PlayerActions, PlayerId, REPLICATION_GROUP}, shared::FixedSet};
+use crate::{ability::{ability_map::AbilityMap, Ability, TriggerAbility}, physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, CursorPosition, MoveSpeed, PlayerActions, PlayerId, REPLICATION_GROUP}, shared::FixedSet};
 
 pub struct OverheatServerPlugin {
     pub predict_all: bool,
@@ -22,6 +22,7 @@ impl Plugin for OverheatServerPlugin {
         .insert_resource(Global {
             predict_all: self.predict_all
         })
+        .add_event::<TriggerAbility>()
         .add_systems(Startup, (start_server, init))
         .add_systems(
             PreUpdate,
@@ -34,12 +35,14 @@ impl Plugin for OverheatServerPlugin {
                 replicate_cursors,
             ).in_set(ServerReplicationSet::ClientReplication)
         )
+        .add_systems(FixedPreUpdate, (
+            trigger_bound_abilities,
+        ))
         .add_systems(
             FixedUpdate, (
-            movement
-                .in_set(FixedSet::Main),
-            trigger_bound_abilities
-                .in_set(FixedSet::Main),
+                movement
+                    .in_set(FixedSet::Main),
+                test_handle_abilities,
         ));
     }
 }
@@ -178,6 +181,7 @@ fn movement(
 
 fn trigger_bound_abilities(
     action_query: Query<(&ActionState<PlayerActions>, &AbilityMap<PlayerActions>)>,
+    mut triggers: EventWriter<TriggerAbility>,
     mut ability_query: Query<&mut Ability>,
 ) {
     for (actions, map) in &action_query {
@@ -186,15 +190,23 @@ fn trigger_bound_abilities(
                 if let Ok(mut ability) = ability_query.get_mut(ability_entity) {
 
                     match ability.cooldown.trigger() {
-                        Ok(_) => {
-                            info!("Triggered ability: {:?}", ability.cooldown);
+                        Ok(()) => {
+                            triggers.send(TriggerAbility(ability_entity));
                         },
-                        Err(_) => {
-                            info!("Failed triggering ability: {:?}", ability.cooldown);
+                        Err(e) => {
+                            info!("Failed triggering ability: {e:?}");
                         },
                     }
                 }
             }
         }
+    }
+}
+
+fn test_handle_abilities(
+    mut triggers: EventReader<TriggerAbility>,
+) {
+    for trigger in triggers.read() {
+        info!("Triggered ability {:?}", trigger.0);
     }
 }
