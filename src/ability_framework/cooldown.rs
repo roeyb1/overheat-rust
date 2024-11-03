@@ -1,11 +1,11 @@
 use std::{fmt::Display, time::Duration};
 
-use bevy::reflect::Reflect;
+use bevy::{prelude::Component, reflect::Reflect};
 use serde::{Deserialize, Serialize};
 
 use super::CannotUseAbility;
 
-#[derive(Clone, Default, PartialEq, Eq, Debug, Serialize, Deserialize, Reflect)]
+#[derive(Component, Clone, Default, PartialEq, Eq, Debug, Serialize, Deserialize, Reflect)]
 pub struct Cooldown {
     cd: Duration,
     /// Time elapsed since the cooldown was last triggered

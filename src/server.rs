@@ -5,7 +5,7 @@ use leafwing_input_manager::prelude::ActionState;
 use lightyear::prelude::{server::{AuthorityPeer, ControlledBy, Replicate, ServerCommands, ServerReplicationSet, SyncTarget}, InputChannel, InputMessage, MainSet, NetworkTarget, OverrideTargetComponent, PrePredicted, Replicated, ReplicationTarget};
 use lightyear::server::{connection::ConnectionManager, events::MessageEvent};
 
-use crate::{ability_framework::{ability_map::AbilityMap, Ability, TriggerAbility}, physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, CursorPosition, MoveSpeed, PlayerActions, PlayerId, REPLICATION_GROUP}, shared::FixedSet};
+use crate::{ability_framework::{ability_map::AbilityMap, pools::{life::LifePool, mana::ManaPool}, Ability, AbilityBundle, AbilityState, TriggerAbility}, physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, CursorPosition, MoveSpeed, PlayerActions, PlayerId, REPLICATION_GROUP}, shared::FixedSet};
 
 pub struct OverheatServerPlugin {
     pub predict_all: bool,
@@ -125,7 +125,7 @@ fn replicate_players(
 
             // #todo: temporarily set up some default abilities for testing
             let test_ability = commands.spawn((
-                Ability::new(10., 0., Duration::from_secs_f32(2.)),
+                AbilityBundle::new(50., 0., Duration::from_secs_f32(2.)),
                 Replicate {
                     sync: sync_target.clone(),
                     group: REPLICATION_GROUP,
@@ -180,16 +180,16 @@ fn movement(
 }
 
 fn trigger_bound_abilities(
-    action_query: Query<(&ActionState<PlayerActions>, &AbilityMap<PlayerActions>)>,
+    mut action_query: Query<(&ActionState<PlayerActions>, &AbilityMap<PlayerActions>, &mut LifePool, &mut ManaPool)>,
     mut triggers: EventWriter<TriggerAbility>,
-    mut ability_query: Query<&mut Ability>,
+    mut ability_query: Query<AbilityState>,
 ) {
-    for (actions, map) in &action_query {
+    for (actions, map, mut life, mut mana) in action_query.iter_mut() {
         for pressed in actions.get_just_pressed() {
             if let Ok(ability_entity) = map.mapped(pressed) {
                 if let Ok(mut ability) = ability_query.get_mut(ability_entity) {
 
-                    match ability.cooldown.trigger() {
+                    match ability.trigger(&mut mana, &mut life) {
                         Ok(()) => {
                             triggers.send(TriggerAbility(ability_entity));
                         },

@@ -61,7 +61,7 @@ pub trait RegeneratingPool: Pool {
     fn regenerate(&mut self, delta_time: Duration);
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Clone, Reflect)]
+#[derive(Component, Serialize, Deserialize, PartialEq, Clone, Reflect)]
 pub struct AbilityCost<P: Pool>(pub P::Quantity);
 
 #[derive(Component, Debug, Default, Serialize, Deserialize)]

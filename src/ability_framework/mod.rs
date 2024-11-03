@@ -1,8 +1,8 @@
 use std::time::Duration;
 
-use bevy::prelude::*;
+use bevy::{ecs::query::QueryData, prelude::*};
 use cooldown::Cooldown;
-use pool::{tick_pools_regen, AbilityCost};
+use pool::{tick_pools_regen, AbilityCost, Pool};
 use pools::{life::{Life, LifePool}, mana::{Mana, ManaPool}};
 use serde::{Deserialize, Serialize};
 
@@ -24,20 +24,86 @@ impl Plugin for AbilitiesPlugin {
 }
 
 #[derive(Component, Serialize, Deserialize, PartialEq, Clone, Reflect)]
-pub struct Ability {
-    pub mp_cost: AbilityCost<ManaPool>,
-    pub lp_cost: AbilityCost<LifePool>,
+pub struct Ability;
 
-    pub cooldown: Cooldown,
+#[derive(Bundle)]
+pub struct AbilityBundle {
+    ability: Ability,
+    mp_cost: AbilityCost<ManaPool>,
+    lp_cost: AbilityCost<LifePool>,
+    cooldown: Cooldown,
 }
 
-impl Ability {
+#[derive(QueryData)]
+#[query_data(mutable)]
+pub struct AbilityState {
+    pub ability: &'static mut Ability,
+    pub cooldown: &'static mut Cooldown,
+    pub mp_cost: Option<&'static mut AbilityCost<ManaPool>>,
+    pub lp_cost: Option<&'static mut AbilityCost<LifePool>>,
+}
+
+impl AbilityBundle {
     pub fn new(mp_cost: f32, life_cost: f32, cooldown: Duration) -> Self {
         Self {
+            ability: Ability,
             mp_cost: AbilityCost::<ManaPool>(Mana(mp_cost)),
             lp_cost: AbilityCost::<LifePool>(Life(life_cost)),
             cooldown: Cooldown::from_secs(cooldown.as_secs_f32()),
         }
+    }
+}
+impl AbilityStateReadOnlyItem<'_> {
+    pub fn ready(&self, mana: &ManaPool, life: &LifePool) -> Result<(), CannotUseAbility> {
+        self.cooldown.ready()?;
+
+        let maybe_mp_cost = self.mp_cost.as_deref();
+        if let Some(mana_cost) = maybe_mp_cost {
+            mana.available(mana_cost.0)?;
+        }
+
+        let maybe_lp_cost = self.lp_cost.as_deref();
+        if let Some(life_cost) = maybe_lp_cost {
+            life.available(life_cost.0)?;
+        }
+
+        Ok(())
+    }
+}
+
+impl AbilityStateItem<'_> {
+    pub fn ready(&self, mana: &ManaPool, life: &LifePool) -> Result<(), CannotUseAbility> {
+        self.cooldown.ready()?;
+
+        let maybe_mp_cost = self.mp_cost.as_deref();
+        if let Some(mana_cost) = maybe_mp_cost {
+            mana.available(mana_cost.0)?;
+        }
+
+        let maybe_lp_cost = self.lp_cost.as_deref();
+        if let Some(life_cost) = maybe_lp_cost {
+            life.available(life_cost.0)?;
+        }
+
+        Ok(())
+    }
+
+    pub fn trigger(&mut self, mana: &mut ManaPool, life: &mut LifePool) -> Result<(), CannotUseAbility> {
+        self.ready(mana, life)?;
+
+        self.cooldown.trigger()?;
+
+        let maybe_mp_cost = self.mp_cost.as_deref();
+        if let Some(mana_cost) = maybe_mp_cost {
+            mana.expend(mana_cost.0)?;
+        }
+
+        let maybe_lp_cost = self.lp_cost.as_deref();
+        if let Some(life_cost) = maybe_lp_cost {
+            life.expend(life_cost.0)?;
+        }
+
+        Ok(())
     }
 }
 
@@ -54,9 +120,9 @@ pub enum CannotUseAbility {
 
 fn tick_ability_cds(
     time: Res<Time>,
-    mut query: Query<&mut Ability>
+    mut query: Query<&mut Cooldown, With<Ability>>
 ) {
-    for mut ability in query.iter_mut() {
-        ability.cooldown.tick(time.delta());
+    for mut cd in query.iter_mut() {
+        cd.tick(time.delta());
     }
 }
