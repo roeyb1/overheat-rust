@@ -18,6 +18,7 @@ impl Plugin for AbilitiesPlugin {
         app
         .add_systems(FixedUpdate, (
             tick_pools_regen::<LifePool>,
+            tick_pools_regen::<ManaPool>,
             tick_ability_cds,
         ));
     }
