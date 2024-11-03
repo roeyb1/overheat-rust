@@ -49,9 +49,8 @@ impl Plugin for ProtocolPlugin {
             .add_prediction(ComponentSyncMode::Full);
 
         //  sync ability states
-        app.register_component::<Ability>(ChannelDirection::Bidirectional)
-            .add_prediction(ComponentSyncMode::Full);
-        app.register_component::<AbilityMap<PlayerActions>>(ChannelDirection::Bidirectional)
-            .add_prediction(ComponentSyncMode::Full);
+        app.register_component::<Ability>(ChannelDirection::ServerToClient);
+        app.register_component::<AbilityMap<PlayerActions>>(ChannelDirection::ServerToClient)
+            .add_map_entities();
     }
 }

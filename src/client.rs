@@ -3,7 +3,7 @@ use leafwing_input_manager::prelude::{ActionState, InputMap, KeyboardVirtualDPad
 use lightyear::{prelude::{client::{ClientCommands, Interpolated, Predicted, PredictionSet, Replicate}, MainSet}, shared::replication::components::Controlled};
 use lightyear::client::events::*;
 
-use crate::{ability::{ability_map::AbilityMap, cooldown::Cooldown, pool::AbilityCost, pools::{life::Life, mana::Mana}, Ability}, physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, CursorBundle, CursorPosition, MoveSpeed, PlayerActions, PlayerBundle}, shared::FixedSet};
+use crate::{physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, CursorBundle, CursorPosition, MoveSpeed, PlayerActions, PlayerBundle}, shared::FixedSet};
 
 pub struct OverheatClientPlugin;
 
@@ -17,9 +17,10 @@ impl Plugin for OverheatClientPlugin {
                 .after(MainSet::Receive)
                 .before(PredictionSet::SpawnPrediction)
         )
-        .add_systems(FixedUpdate, 
-            predicted_player_movement
-                .in_set(FixedSet::Main)
+        .add_systems(FixedUpdate, (
+                predicted_player_movement,
+            )
+            .in_set(FixedSet::Main)
         )
         .add_systems(
             Update, (
@@ -54,18 +55,6 @@ fn handle_connection(
             },
         ));
 
-        // #todo: temporarily set up some default abilities for testing
-        let test_ability = commands.spawn((
-            Ability {
-                mp_cost: AbilityCost(Mana(10.)),
-                lp_cost: AbilityCost(Life(0.)),
-                cooldown: Cooldown::from_secs(2.),
-            },
-        )).id();
-
-        let mut ability_map = AbilityMap::new();
-        ability_map.add_binding(PlayerActions::PrimaryAttack, test_ability);
-
         let player = commands.spawn((
             PlayerBundle::new(
                 client_id,
@@ -80,7 +69,6 @@ fn handle_connection(
                     PlayerActions::Move, KeyboardVirtualDPad::WASD
                         .inverted_y()
                 ),
-                ability_map,
             ),
         )).id();
 

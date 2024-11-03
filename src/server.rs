@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::prelude::*;
 use leafwing_input_manager::prelude::ActionState;
 use lightyear::prelude::{server::{AuthorityPeer, ControlledBy, Replicate, ServerCommands, ServerReplicationSet, SyncTarget}, InputChannel, InputMessage, MainSet, NetworkTarget, OverrideTargetComponent, PrePredicted, Replicated, ReplicationTarget};
@@ -91,7 +93,10 @@ fn replicate_players(
         let client_id = replicated.client_id();
         info!("received player spawn event from client {client_id:?}");
 
-        if let Some(mut e) = commands.get_entity(entity) {
+        if let Some(e) = commands.get_entity(entity) {
+            let player = e.id();
+            drop(e);
+
             let mut sync_target = SyncTarget::default();
 
             if global.predict_all {
@@ -101,7 +106,7 @@ fn replicate_players(
             }
 
             let replicate = Replicate {
-                sync: sync_target,
+                sync: sync_target.clone(),
                 controlled_by: ControlledBy {
                     target: NetworkTarget::Single(client_id),
                     ..default()
@@ -109,11 +114,26 @@ fn replicate_players(
                 group: REPLICATION_GROUP,
                 ..default()
             };
-            e.insert((
+            commands.entity(player).insert((
                 replicate,
                 OverrideTargetComponent::<PrePredicted>::new(NetworkTarget::Single(client_id)),
                 PhysicsBundle::player(),
             ));
+
+            // #todo: temporarily set up some default abilities for testing
+            let test_ability = commands.spawn((
+                Ability::new(10., 0., Duration::from_secs_f32(2.)),
+                Replicate {
+                    sync: sync_target.clone(),
+                    group: REPLICATION_GROUP,
+                    ..default()
+                },
+            )).id();
+
+            let mut ability_map = AbilityMap::new();
+            ability_map.add_binding(PlayerActions::PrimaryAttack, test_ability);
+
+            commands.entity(player).insert(ability_map);
         }
     }
 }

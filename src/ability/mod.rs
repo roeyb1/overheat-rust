@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::prelude::*;
+use bevy::{ecs::entity::MapEntities, prelude::*};
 use cooldown::Cooldown;
 use pool::{tick_pools_regen, AbilityCost};
 use pools::{life::{Life, LifePool}, mana::{Mana, ManaPool}};
@@ -16,9 +16,10 @@ pub struct AbilitiesPlugin;
 impl Plugin for AbilitiesPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app
-        .add_systems(Update,
-            tick_pools_regen::<LifePool>
-        );
+        .add_systems(FixedUpdate, (
+            tick_pools_regen::<LifePool>,
+            tick_ability_cds,
+        ));
     }
 }
 
@@ -45,4 +46,14 @@ pub enum CannotUseAbility {
     OnCooldown,
     ResourceMissing,
     AbilityNotBound,
+}
+
+
+fn tick_ability_cds(
+    time: Res<Time>,
+    mut query: Query<&mut Ability>
+) {
+    for mut ability in query.iter_mut() {
+        ability.cooldown.tick(time.delta());
+    }
 }

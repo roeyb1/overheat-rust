@@ -1,4 +1,4 @@
-use core::{fmt, ops::{Add, AddAssign, Sub, SubAssign}};
+use core::ops::{Add, AddAssign, Sub, SubAssign};
 use std::time::Duration;
 
 use bevy::{prelude::{Component, Query, Res}, reflect::Reflect, time::Time};
