@@ -26,8 +26,11 @@ fn handle_dodge(
         if let Ok(charge) = dash_query.get(trigger.ability) {
             if let Ok((mut character, speed)) = character_query.get_mut(trigger.source) {
                 let move_dir = character.linear_velocity.normalize_or_zero();
-                info!("Triggered dodge with {:?}", charge.0);
-                character.external_impulse.apply_impulse(move_dir.normalize_or_zero() * speed.0 * 3.);
+
+                let base_distance = speed.0 * 3.;
+                // multiply the base distance for every additional second the charge is held.
+                let charge_factor = charge.duration().as_secs_f32() + 1.;
+                character.external_impulse.apply_impulse(move_dir.normalize_or_zero() * base_distance * charge_factor);
             }
         }
     }
