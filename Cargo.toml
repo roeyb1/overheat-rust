@@ -40,7 +40,7 @@ serde = { version = "1.0.0" }
 bevy_sprite3d = { version = "3.0.0" }
 bevy_asset_loader = { version = "0.21.0", features = ["2d"] }
 bevy_screen_diagnostics = "0.6"
-leafwing-input-manager = { version = "0.15.0" }
+leafwing-input-manager = { version = "0.15.0", features = ["egui" ] }
 clap = { version = "4.4.5", features = ["derive"]}
 avian3d = { version = "0.1.1", default-features = false, features = [
     "3d",
