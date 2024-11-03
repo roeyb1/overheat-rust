@@ -6,7 +6,7 @@ pub mod life {
     use derive_more::derive::{Add, AddAssign, Sub, SubAssign};
     use serde::{Deserialize, Serialize};
 
-    use crate::ability::pool::{MaxPoolLessThanMin, Pool, RegeneratingPool};
+    use crate::ability_framework::pool::{MaxPoolLessThanMin, Pool, RegeneratingPool};
 
     #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default, Add, Sub, AddAssign, SubAssign, Serialize, Deserialize, Reflect)]
     pub struct Life(pub f32);
@@ -133,7 +133,7 @@ pub mod mana {
     use derive_more::derive::{Add, AddAssign, Sub, SubAssign};
     use serde::{Deserialize, Serialize};
 
-    use crate::ability::pool::{MaxPoolLessThanMin, Pool, RegeneratingPool};
+    use crate::ability_framework::pool::{MaxPoolLessThanMin, Pool, RegeneratingPool};
 
     #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default, Add, Sub, AddAssign, SubAssign, Serialize, Deserialize, Reflect)]
     pub struct Mana(pub f32);

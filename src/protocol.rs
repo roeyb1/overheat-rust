@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use lightyear::{prelude::{client::ComponentSyncMode, AppComponentExt, ChannelDirection}, utils::avian3d::{position, rotation}};
 use lightyear::shared::input::leafwing::LeafwingInputPlugin;
 
-use crate::{ability::{ability_map::AbilityMap, pools::{life::LifePool, mana::ManaPool}, Ability}, player::{CursorPosition, MoveSpeed, PlayerActions, PlayerId}};
+use crate::{ability_framework::{ability_map::AbilityMap, pools::{life::LifePool, mana::ManaPool}, Ability}, player::{CursorPosition, MoveSpeed, PlayerActions, PlayerId}};
 
 pub struct ProtocolPlugin;
 

@@ -5,7 +5,7 @@ use leafwing_input_manager::{prelude::{ActionState, InputMap}, Actionlike, Input
 use lightyear::prelude::{client, ClientId, PrePredicted, ReplicateHierarchy, ReplicationGroup};
 use serde::{Deserialize, Serialize};
 
-use crate::{ability::pools::{life::{Life, LifePool}, mana::{Mana, ManaPool}}, physics::{CharacterQueryItem, PhysicsBundle}};
+use crate::{ability_framework::pools::{life::{Life, LifePool}, mana::{Mana, ManaPool}}, physics::{CharacterQueryItem, PhysicsBundle}};
 
 
 pub const REPLICATION_GROUP: ReplicationGroup = ReplicationGroup::new_id(1);

@@ -1,7 +1,7 @@
 use avian3d::prelude::*;
 use bevy::{prelude::*, render::RenderPlugin};
 
-use crate::{ability::{ability_map::AbilityMap, AbilitiesPlugin}, player::{CursorPosition, PlayerActions, PlayerId}, protocol::ProtocolPlugin, rendering::OverheatRenderPlugin, FIXED_TIMESTEP_HZ};
+use crate::{ability_framework::{ability_map::AbilityMap, AbilitiesPlugin}, player::{CursorPosition, PlayerActions, PlayerId}, protocol::ProtocolPlugin, rendering::OverheatRenderPlugin, FIXED_TIMESTEP_HZ};
 
 pub struct OverheatSharedPlugin;
 
