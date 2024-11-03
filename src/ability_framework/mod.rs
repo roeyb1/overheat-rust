@@ -21,6 +21,7 @@ impl Plugin for AbilityFrameworkServerPlugin {
             tick_pools_regen::<LifePool>,
             tick_pools_regen::<ManaPool>,
             tick_ability_cds,
+            tick_ability_charge,
         ));
     }
 }
@@ -34,6 +35,7 @@ impl Plugin for AbilityFrameworkClientPlugin {
             predict_tick_pools_regen::<LifePool>,
             predict_tick_pools_regen::<ManaPool>,
             predict_tick_ability_cds,
+            predict_tick_ability_charge,
         ));
     }
 }
@@ -43,6 +45,19 @@ pub struct Ability;
 
 #[derive(Component, Serialize, Deserialize, PartialEq, Clone, Reflect)]
 pub struct PredictedAbility;
+
+#[derive(Component, Serialize, Deserialize, PartialEq, Clone, Default, Reflect)]
+pub struct AbilityCharge(pub Duration);
+
+impl AbilityCharge {
+    pub fn start(&mut self) {
+        self.0 = Duration::ZERO;
+    }
+
+    pub fn duration(&self) -> Duration {
+        self.0
+    }
+}
 
 #[derive(Bundle)]
 pub struct AbilityBundle {
@@ -152,11 +167,29 @@ fn tick_ability_cds(
     }
 }
 
+fn tick_ability_charge(
+    time: Res<Time>,
+    mut query: Query<&mut AbilityCharge>
+) {
+    for mut charge in query.iter_mut() {
+        charge.0 += time.delta();
+    }
+}
+
 fn predict_tick_ability_cds(
     time: Res<Time>,
     mut query: Query<&mut Cooldown, (With<Ability>, With<Predicted>)>
 ) {
     for mut cd in query.iter_mut() {
         cd.tick(time.delta());
+    }
+}
+
+fn predict_tick_ability_charge(
+    time: Res<Time>,
+    mut query: Query<&mut AbilityCharge, (With<PredictedAbility>, With<Predicted>)>
+) {
+    for mut charge in query.iter_mut() {
+        charge.0 += time.delta();
     }
 }

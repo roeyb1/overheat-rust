@@ -1,10 +1,12 @@
+use std::time::Duration;
+
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::FilterQueryInspectorPlugin;
 use leafwing_input_manager::prelude::{ActionState, InputMap, KeyboardVirtualDPad, WithDualAxisProcessingPipelineExt};
 use lightyear::{prelude::{client::{ClientCommands, Confirmed, Interpolated, Predicted, PredictionSet, Replicate}, MainSet}, shared::replication::components::Controlled};
 use lightyear::client::events::*;
 
-use crate::{ability_framework::{ability_map::AbilityMap, pools::{life::LifePool, mana::ManaPool}, AbilityFrameworkClientPlugin, AbilityState, PredictedAbility, TriggerAbility}, physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, CursorBundle, CursorPosition, MoveSpeed, PlayerActions, PlayerBundle, PlayerId}, shared::FixedSet};
+use crate::{ability_framework::{ability_map::AbilityMap, pools::{life::LifePool, mana::ManaPool}, AbilityCharge, AbilityFrameworkClientPlugin, AbilityState, PredictedAbility, TriggerAbility}, physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, CursorBundle, CursorPosition, MoveSpeed, PlayerActions, PlayerBundle, PlayerId}, shared::FixedSet};
 
 pub struct OverheatClientPlugin;
 
@@ -23,6 +25,7 @@ impl Plugin for OverheatClientPlugin {
         );
         app.add_systems(FixedUpdate, (
                 predicted_player_movement,
+                start_charging_predicted_abilities,
                 trigger_predicted_abilities,
             )
             .in_set(FixedSet::Main)
@@ -155,15 +158,33 @@ fn cursor_movement(
     }
 }
 
+fn start_charging_predicted_abilities(
+    action_query: Query<(&ActionState<PlayerActions>, &AbilityMap<PlayerActions>, &LifePool, &ManaPool), With<Predicted>>,
+    mut ability_query: Query<(AbilityState, &mut AbilityCharge), (With<PredictedAbility>, With<Predicted>)>,
+) {
+    for (actions, map, life, mana) in action_query.iter() {
+        for pressed in actions.get_just_pressed() {
+            if let Ok(ability_entity) = map.mapped(pressed) {
+                if let Ok((ability_state, mut charge)) = ability_query.get_mut(ability_entity) {
+                    if ability_state.ready(mana, life).is_ok() {
+                        charge.start();
+                    }
+                }
+            }
+        }
+    }
+}
+
 fn trigger_predicted_abilities(
     mut action_query: Query<(Entity, &ActionState<PlayerActions>, &AbilityMap<PlayerActions>, &mut LifePool, &mut ManaPool), With<Predicted>>,
     mut triggers: EventWriter<TriggerAbility>,
     mut ability_query: Query<AbilityState, (With<PredictedAbility>, With<Predicted>)>,
 ) {
     for (entity, actions, map, mut life, mut mana) in action_query.iter_mut() {
-        for pressed in actions.get_pressed() {
+        for pressed in actions.get_just_released() {
             if let Ok(ability_entity) = map.mapped(pressed) {
                 if let Ok(mut ability) = ability_query.get_mut(ability_entity) {
+
                     match ability.trigger(&mut mana, &mut life) {
                         Ok(()) => {
                             triggers.send(TriggerAbility {
