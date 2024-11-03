@@ -12,6 +12,7 @@ pub struct MaxPoolLessThanMin;
 #[derive(Component, Serialize, Deserialize, PartialEq, Clone, Reflect)]
 pub struct AbilityCost<P: Pool>(pub P::Quantity);
 
+#[allow(unused)]
 pub trait Pool: Sized {
     type Quantity: Add<Output = Self::Quantity>
         + Sub<Output = Self::Quantity>
@@ -57,6 +58,7 @@ pub trait Pool: Sized {
     }
 }
 
+#[allow(unused)]
 pub trait RegeneratingPool: Pool {
     fn regen_per_second(&self) -> Self::Quantity;
 

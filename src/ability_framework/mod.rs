@@ -71,6 +71,8 @@ impl AbilityBundle {
         }
     }
 }
+
+#[allow(unused)]
 impl AbilityStateReadOnlyItem<'_> {
     pub fn ready(&self, mana: &ManaPool, life: &LifePool) -> Result<(), CannotUseAbility> {
         self.cooldown.ready()?;

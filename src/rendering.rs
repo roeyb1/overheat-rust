@@ -1,5 +1,5 @@
 use avian3d::prelude::{Position, Rotation};
-use bevy::{core_pipeline::{bloom::BloomSettings, tonemapping::Tonemapping}, diagnostic::LogDiagnosticsPlugin, pbr::ScreenSpaceAmbientOcclusionBundle, prelude::*, render::camera::ScalingMode};
+use bevy::{core_pipeline::{bloom::BloomSettings, tonemapping::Tonemapping}, pbr::ScreenSpaceAmbientOcclusionBundle, prelude::*, render::camera::ScalingMode};
 use bevy_asset_loader::loading_state::{config::ConfigureLoadingState, LoadingState, LoadingStateAppExt};
 use bevy_screen_diagnostics::{Aggregate, ScreenDiagnostics, ScreenDiagnosticsPlugin};
 use bevy_sprite3d::{Sprite3d, Sprite3dParams, Sprite3dPlugin};

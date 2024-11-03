@@ -12,6 +12,7 @@ pub struct Cooldown {
     elapsed: Duration,
 }
 
+#[allow(unused)]
 impl Cooldown {
     pub fn new(cd: Duration) -> Self {
         assert!(cd != Duration::ZERO);
