@@ -5,7 +5,7 @@ use leafwing_input_manager::prelude::ActionState;
 use lightyear::prelude::{server::{AuthorityPeer, ControlledBy, Replicate, ServerCommands, ServerReplicationSet, SyncTarget}, InputChannel, InputMessage, MainSet, NetworkTarget, OverrideTargetComponent, PrePredicted, Replicated, ReplicationTarget};
 use lightyear::server::{connection::ConnectionManager, events::MessageEvent};
 
-use crate::{ability_framework::{ability_map::AbilityMap, pools::{life::LifePool, mana::ManaPool}, Ability, AbilityBundle, AbilityState, TriggerAbility}, physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, CursorPosition, MoveSpeed, PlayerActions, PlayerId, REPLICATION_GROUP}, shared::FixedSet};
+use crate::{ability_framework::{ability_map::AbilityMap, pools::{life::LifePool, mana::ManaPool}, Ability, AbilityBundle, AbilityState, PredictedAbility, TriggerAbility}, physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, CursorPosition, MoveSpeed, PlayerActions, PlayerId, REPLICATION_GROUP}, shared::FixedSet};
 
 pub struct OverheatServerPlugin {
     pub predict_all: bool,
@@ -22,7 +22,6 @@ impl Plugin for OverheatServerPlugin {
         .insert_resource(Global {
             predict_all: self.predict_all
         })
-        .add_event::<TriggerAbility>()
         .add_systems(Startup, (start_server, init))
         .add_systems(
             PreUpdate,
@@ -131,6 +130,8 @@ fn replicate_players(
                     group: REPLICATION_GROUP,
                     ..default()
                 },
+                PredictedAbility,
+                Name::from("TestAbility"),
             )).id();
 
             let mut ability_map = AbilityMap::new();

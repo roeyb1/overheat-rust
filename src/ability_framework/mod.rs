@@ -27,6 +27,9 @@ impl Plugin for AbilitiesPlugin {
 #[derive(Component, Serialize, Deserialize, PartialEq, Clone, Reflect)]
 pub struct Ability;
 
+#[derive(Component, Serialize, Deserialize, PartialEq, Clone, Reflect)]
+pub struct PredictedAbility;
+
 #[derive(Bundle)]
 pub struct AbilityBundle {
     ability: Ability,

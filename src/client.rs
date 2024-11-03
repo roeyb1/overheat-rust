@@ -3,7 +3,7 @@ use leafwing_input_manager::prelude::{ActionState, InputMap, KeyboardVirtualDPad
 use lightyear::{prelude::{client::{ClientCommands, Interpolated, Predicted, PredictionSet, Replicate}, MainSet}, shared::replication::components::Controlled};
 use lightyear::client::events::*;
 
-use crate::{physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, CursorBundle, CursorPosition, MoveSpeed, PlayerActions, PlayerBundle}, shared::FixedSet};
+use crate::{ability_framework::{ability_map::AbilityMap, pools::{life::LifePool, mana::ManaPool}, AbilityState, PredictedAbility, TriggerAbility}, physics::{CharacterQuery, PhysicsBundle}, player::{shared_player_movement, CursorBundle, CursorPosition, MoveSpeed, PlayerActions, PlayerBundle, PlayerId}, shared::FixedSet};
 
 pub struct OverheatClientPlugin;
 
@@ -19,6 +19,7 @@ impl Plugin for OverheatClientPlugin {
         )
         .add_systems(FixedUpdate, (
                 predicted_player_movement,
+                trigger_predicted_abilities,
             )
             .in_set(FixedSet::Main)
         )
@@ -88,7 +89,7 @@ fn handle_connection(
 /// shouldn't be constantly replicated.
 fn finalize_remote_player_spawn(
     mut commands: Commands,
-    mut query: Query<(Entity, Has<Controlled>), Or<(Added<Interpolated>, Added<Predicted>)>>,
+    mut query: Query<(Entity, Has<Controlled>), (With<PlayerId>, Or<(Added<Interpolated>, Added<Predicted>)>)>,
 ) {
     for (entity, locally_controlled) in query.iter_mut() {
         //only need to do this for remote players:
@@ -143,6 +144,30 @@ fn cursor_movement(
                         for mut cursor_pos in cusor_query.iter_mut() {
                             cursor_pos.set_if_neq(CursorPosition(ray.get_point(t)));
                         }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn trigger_predicted_abilities(
+    mut action_query: Query<(&ActionState<PlayerActions>, &AbilityMap<PlayerActions>, &mut LifePool, &mut ManaPool), With<Predicted>>,
+    mut triggers: EventWriter<TriggerAbility>,
+    mut ability_query: Query<AbilityState, With<PredictedAbility>>,
+) {
+    for (actions, map, mut life, mut mana) in action_query.iter_mut() {
+        for pressed in actions.get_just_pressed() {
+            if let Ok(ability_entity) = map.mapped(pressed) {
+                if let Ok(mut ability) = ability_query.get_mut(ability_entity) {
+                    match ability.trigger(&mut mana, &mut life) {
+                        Ok(()) => {
+                            info!("Trigger");
+                            triggers.send(TriggerAbility(ability_entity));
+                        },
+                        Err(e) => {
+                            info!("Failed triggering ability: {e:?}");
+                        },
                     }
                 }
             }

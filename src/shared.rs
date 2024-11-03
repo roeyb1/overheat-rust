@@ -1,7 +1,7 @@
 use avian3d::prelude::*;
 use bevy::{prelude::*, render::RenderPlugin};
 
-use crate::{ability_framework::{ability_map::AbilityMap, AbilitiesPlugin}, player::{CursorPosition, PlayerActions, PlayerId}, protocol::ProtocolPlugin, rendering::OverheatRenderPlugin, FIXED_TIMESTEP_HZ};
+use crate::{ability_framework::{ability_map::AbilityMap, AbilitiesPlugin, TriggerAbility}, player::{CursorPosition, PlayerActions, PlayerId}, protocol::ProtocolPlugin, rendering::OverheatRenderPlugin, FIXED_TIMESTEP_HZ};
 
 pub struct OverheatSharedPlugin;
 
@@ -22,6 +22,8 @@ impl Plugin for OverheatSharedPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(ProtocolPlugin);
         app.add_plugins(AbilitiesPlugin);
+
+        app.add_event::<TriggerAbility>();
 
         if app.is_plugin_added::<RenderPlugin>() {
             app.add_plugins(OverheatRenderPlugin);

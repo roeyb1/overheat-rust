@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use lightyear::{prelude::{client::ComponentSyncMode, AppComponentExt, ChannelDirection}, utils::avian3d::{position, rotation}};
 use lightyear::shared::input::leafwing::LeafwingInputPlugin;
 
-use crate::{ability_framework::{ability_map::AbilityMap, pools::{life::LifePool, mana::ManaPool}, Ability}, player::{CursorPosition, MoveSpeed, PlayerActions, PlayerId}};
+use crate::{ability_framework::{ability_map::AbilityMap, cooldown::Cooldown, pool::AbilityCost, pools::{life::LifePool, mana::ManaPool}, Ability, PredictedAbility}, player::{CursorPosition, MoveSpeed, PlayerActions, PlayerId}};
 
 pub struct ProtocolPlugin;
 
@@ -49,8 +49,16 @@ impl Plugin for ProtocolPlugin {
             .add_prediction(ComponentSyncMode::Full);
 
         //  sync ability states
-        app.register_component::<Ability>(ChannelDirection::ServerToClient);
+        app.register_component::<Ability>(ChannelDirection::ServerToClient)
+            .add_prediction(ComponentSyncMode::Once);
+        app.register_component::<PredictedAbility>(ChannelDirection::ServerToClient)
+            .add_prediction(ComponentSyncMode::Once);
+
+        app.register_component::<Cooldown>(ChannelDirection::ServerToClient)
+            .add_prediction(ComponentSyncMode::Simple);
+
         app.register_component::<AbilityMap<PlayerActions>>(ChannelDirection::ServerToClient)
+            .add_prediction(ComponentSyncMode::Simple)
             .add_map_entities();
     }
 }
